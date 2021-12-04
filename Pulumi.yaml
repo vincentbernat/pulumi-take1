@@ -1,0 +1,4 @@
+---
+name: pulumi-take1
+runtime: python
+description: First attempt at using Pulumi
