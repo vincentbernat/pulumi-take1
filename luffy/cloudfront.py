@@ -5,7 +5,7 @@ import pulumi_aws as aws
 def cloudfront_distribution(domain):
     """Cookie-less Cloudfront distribution."""
     return aws.cloudfront.Distribution(
-        domain.replace(".", "-"),
+        domain,
         default_cache_behavior=aws.cloudfront.DistributionDefaultCacheBehaviorArgs(
             allowed_methods=[
                 "GET",
