@@ -13,6 +13,9 @@ let pkgs = import <nixpkgs> {};
         # Needed for pulumi to detect plugins
         pip
         setuptools
+
+        # Other tools
+        black
       '';
       providers = {
         pip = "nixpkgs";
