@@ -1,5 +1,7 @@
+import re
 import pulumi
 import pulumi_aws as aws
+from .kms import dns_cmk
 
 
 def record(zone, name, rrtype, records, ttl=86400):
@@ -66,6 +68,17 @@ def fastmail_mx(zone, subdomains=[]):
     record(zone, "_dmarc", "TXT", "v=DMARC1; p=none; sp=none")
 
 
+def sign(zone):
+    """Sign a zone."""
+    return aws.route53.KeySigningKey(
+        zone._name,
+        hosted_zone_id=zone.zone_id,
+        key_management_service_arn=dns_cmk.target_key_arn,
+        name=re.sub(r"[^0-9a-zA-Z]", "", zone._name),
+        status="ACTIVE",
+    )
+
+
 # Luffy
 y_luffy_cx = aws.route53.Zone("y.luffy.cx", name="y.luffy.cx")
 # luffy_cx = aws.route53.Zone(
@@ -87,3 +100,4 @@ www(enxio_fr, "@")
 www(enxio_fr, "www")
 www(enxio_fr, "media")
 fastmail_mx(enxio_fr)
+sign(enxio_fr)
