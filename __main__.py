@@ -1,3 +1,3 @@
 """Managing my infrastructure with Pulumi"""
 
-from luffy import cloudfront, dns, kms
+from luffy import cloudfront, dns, kms, vm

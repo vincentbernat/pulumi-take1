@@ -3,6 +3,7 @@ import collections
 import pulumi
 import pulumi_aws as aws
 from .kms import dns_cmk
+from .vm import www_servers
 
 
 def record(zone, name, rrtype, records, ttl=86400, rname=None, **more):
@@ -24,29 +25,14 @@ def record(zone, name, rrtype, records, ttl=86400, rname=None, **more):
 def www(zone, name):
     """Create records for web servers."""
     ttl = 60 * 60 * 2
-    # Each location should be covered by at least two servers...
     servers = {
-        "web03": {
-            # Finland
-            "A": "95.216.162.158",
-            "AAAA": "2a01:4f9:c010:1a9c::1",
-            "geolocations": [("continent", ["EU", "AF"])],
-        },
-        "web04": {
-            # Germany
-            "A": "116.203.18.48",
-            "AAAA": "2a01:4f8:1c0c:5eb5::1",
-            "geolocations": [("continent", ["EU", "AF", "NA", "SA"])],
-        },
-        "web05": {
-            # US, Virginia
-            "A": "5.161.44.145",
-            "AAAA": "2a01:4ff:f0:b91::1",
-            "geolocations": [("continent", ["NA", "SA"])],
-        },
-    }
-    servers = {
-        server: data for server, data in servers.items() if not data.get("disabled")
+        server["server"]._name: {
+            "A": server["server"].ipv4_address,
+            "AAAA": server["server"].ipv6_address,
+            "geolocations": server["geolocations"],
+        }
+        for server in www_servers
+        if not server.get("disabled")
     }
     # Normalize the data a bit
     geolocations = set()
