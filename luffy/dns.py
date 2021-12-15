@@ -7,39 +7,69 @@ from .vm import www_servers
 
 
 class Zone:
-    def __init__(self, resource_name, **kwargs):
-        self.name = resource_name
-        self.zone = aws.route53.Zone(resource_name, **kwargs)
-
-    def record(self, name, rrtype, records, ttl=86400, set_identifier=None, **more):
-        """Create a record."""
-        if name == "@":
-            name = self.name
-        else:
-            name = f"{name}.{self.name}"
-        aws.route53.Record(
-            f"{rrtype}-{set_identifier}-{name}" if set_identifier else f"{rrtype}-{name}",
-            zone_id=self.zone.zone_id,
-            name=f"{name}",
-            type=rrtype,
-            ttl=ttl,
-            records=records if type(records) is list else [records],
-            set_identifier=set_identifier,
-            **more,
-        )
-        return self
-
     def TXT(self, name, records, **kwargs):
         return self.record(name, "TXT", records, **kwargs)
 
     def MX(self, name, records, **kwargs):
         return self.record(name, "MX", records, **kwargs)
 
+    def A(self, name, records, **kwargs):
+        return self.record(name, "A", records, **kwargs)
+
+    def AAAA(self, name, records, **kwargs):
+        return self.record(name, "AAAA", records, **kwargs)
+
     def CNAME(self, name, records, **kwargs):
         return self.record(name, "CNAME", records, **kwargs)
 
     def SRV(self, name, records, **kwargs):
         return self.record(name, "SRV", records, **kwargs)
+
+    def fastmail_mx(self, subdomains=[]):
+        """Create records for MX with FastMail."""
+        for subdomain in subdomains + ["@", "*"]:
+            self.MX(
+                subdomain,
+                [
+                    "10 in1-smtp.messagingengine.com.",
+                    "20 in2-smtp.messagingengine.com.",
+                ],
+            )
+        self.TXT("@", "v=spf1 include:spf.messagingengine.com ~all")
+        for dk in ("mesmtp", "fm1", "fm2", "fm3"):
+            self.CNAME(f"{dk}._domainkey", f"{dk}.{self.name}.dkim.fmhosted.com.")
+        self.SRV("_submission._tcp", "0 1 587 smtp.fastmail.com.")
+        self.SRV("_imap._tcp", "0 0 0 .")
+        self.SRV("_imaps._tcp", "0 1 993 imap.fastmail.com.")
+        self.TXT("_dmarc", "v=DMARC1; p=none; sp=none")
+        return self
+
+
+class Route53Zone(Zone):
+    def __init__(self, name, **kwargs):
+        self.name = name
+        self.zone = aws.route53.Zone(name, name=name, **kwargs)
+
+    def record(self, name, rrtype, records, ttl=86400, **more):
+        """Create a record."""
+        if name == "@":
+            name = self.name
+        else:
+            name = f"{name}.{self.name}"
+        if type(records) is str:
+            records = [records]
+        aws.route53.Record(
+            f"{rrtype}-{more['set_identifier']}-{name}"
+            if more.get("set_identifier")
+            else f"{rrtype}-{name}",
+            zone_id=self.zone.zone_id,
+            name=f"{name}",
+            type=rrtype,
+            ttl=ttl,
+            records=records,
+            **more,
+        )
+        return self
 
     def www(self, name):
         """Create records for web servers."""
@@ -86,32 +116,9 @@ class Zone:
         self.record(name, "CAA", ['0 issue "buypass.com"', '0 issuewild ";"'])
         return self
 
-    def fastmail_mx(self, subdomains=[]):
-        """Create records for MX with FastMail."""
-        subdomains += ["@", "*"]
-        for subdomain in subdomains:
-            self.MX(
-                subdomain,
-                [
-                    "10 in1-smtp.messagingengine.com.",
-                    "20 in2-smtp.messagingengine.com.",
-                ],
-            )
-        self.TXT(
-            "@",
-            ["v=spf1 include:spf.messagingengine.com ~all"],
-        )
-        for dk in ("mesmtp", "fm1", "fm2", "fm3"):
-            self.CNAME(f"{dk}._domainkey", f"{dk}.{self.name}.dkim.fmhosted.com.")
-        self.SRV("_submission._tcp", "0 1 587 smtp.fastmail.com.")
-        self.SRV("_imap._tcp", "0 0 0 .")
-        self.SRV("_imaps._tcp", "0 1 993 imap.fastmail.com.")
-        self.TXT("_dmarc", "v=DMARC1; p=none; sp=none")
-        return self
-
     def sign(self):
         """Sign a zone."""
-        aws.route53.KeySigningKey(
+        self.ksk = aws.route53.KeySigningKey(
             self.name,
             hosted_zone_id=self.zone.zone_id,
             key_management_service_arn=dns_cmk.target_key_arn,
@@ -121,16 +128,13 @@ class Zone:
         return self
 
 
-# y.luffy.cx
-zone = Zone("y.luffy.cx", name="y.luffy.cx").sign()
-
 # enxio.fr
-zone = Zone("enxio.fr", name="enxio.fr").sign()
+zone = Route53Zone("enxio.fr").sign()
 zone.www("@").www("www").www("media")
 zone.fastmail_mx()
 
 # une-oasis-une-ecole.fr
-zone = Zone("une-oasis-une-ecole.fr", name="une-oasis-une-ecole.fr").sign()
+zone = Route53Zone("une-oasis-une-ecole.fr").sign()
 zone.www("@").www("www").www("media")
 zone.MX("@", ["10 spool.mail.gandi.net.", "50 fb.mail.gandi.net."])
 zone.TXT(
@@ -144,3 +148,31 @@ zone.TXT(
     "mailjet._domainkey",
     "k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDWsJlP6+qLJS/RLvoNrMPRPrfzcQAuvZ1vUIJkqGauJ23zowQ9ni44XqzYyiBPx00c0QCQhO7oBEhnTeVGMcIfzNASeofZDfiu2dk7iOARpBeKT+EPJtXKS8cW0nz6cusANW7Mxa1Or1sUeV5+J0jFSAmeqWjginJPHJri7ZDA6QIDAQAB",
 )
+
+# bernat.im / bernat.ch
+for zone in [Route53Zone("bernat.ch"), Route53Zone("bernat.im")]:
+    zone.sign()
+    zone.www("@").www("vincent")
+    zone.fastmail_mx(subdomains=["vincent"])
+    if zone.name == "bernat.ch":
+        zone.CNAME("4unklrhyt7lw.vincent", "gv-qcgpdhlvhtgedt.dv.googlehosted.com.")
+
+# luffy.cx
+zone = Route53Zone("luffy.cx").sign()
+zone.fastmail_mx()
+# y.luffy.cx DDNS
+y_luffy_cx = Route53Zone("y.luffy.cx").sign()
+zone.record("y", "NS", records=y_luffy_cx.zone.name_servers)
+zone.record("y", "DS", records=[y_luffy_cx.ksk.ds_record])
+zone.CNAME("eizo", "eizo.y.luffy.cx.")
+# services
+zone.www("@").www("media").www("www").www("haproxy")
+zone.CNAME("comments", "web03.luffy.cx.")
+# hosts
+for server in www_servers:
+    name = server["server"]._name
+    if not name.endswith(".luffy.cx"):
+        continue
+    name = name.removesuffix(".luffy.cx")
+    zone.A(name, [server["server"].ipv4_address])
+    zone.AAAA(name, [server["server"].ipv6_address])
