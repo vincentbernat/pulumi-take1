@@ -36,6 +36,7 @@ pkgs.mkShell {
   ];
   shellHook = ''
     export PULUMI_SKIP_UPDATE_CHECK=1
+    echo "Importing secrets..."
     export PULUMI_CONFIG_PASSPHRASE=$(pass show personal/pulumi/stack-dev)
     eval $(pass show personal/aws.amazon.com/Administrator | grep '^export')
     eval $(pass show personal/hetzner.com/vincent@bernat.ch | grep '^export')
