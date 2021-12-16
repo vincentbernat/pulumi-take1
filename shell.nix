@@ -8,11 +8,21 @@ let pkgs = import <nixpkgs> {};
       pypiDataRev = "99799f6300b2dc4a4063dc3da032f5f169709567";
       pypiDataSha256 = "0kacxgr7cybd0py8d3mshr9h3wab9x3fvrlpr2fd240xg0v2k5gm";
     };
+    pulumi-version = pkgs.pulumi-bin.version;
+    pulumi-XXX-version = what: builtins.elemAt
+      (pkgs.lib.flatten
+        (builtins.filter (x: x != null)
+          (map
+            (x: builtins.match "^pulumi-resource-${what}-v([0-9.]+)-linux.*" x.name)
+            pkgs.pulumi-bin.srcs)))
+      0;
+    pulumi-aws-version = pulumi-XXX-version "aws";
+    pulumi-hcloud-version = pulumi-XXX-version "hcloud";
     python-env = mach-nix.mkPython {
       requirements = ''
-        pulumi==3.19.0
-        pulumi-aws==4.30.0
-        pulumi-hcloud==1.7.0
+        pulumi==${pulumi-version}
+        pulumi-aws==${pulumi-aws-version}
+        pulumi-hcloud==${pulumi-hcloud-version}
 
         # Needed for pulumi to detect plugins
         pip
