@@ -11,7 +11,7 @@ let pkgs = import <nixpkgs> {};
     python-env = mach-nix.mkPython {
       requirements = ''
         pulumi==3.19.0
-        pulumi-aws==4.5.1
+        pulumi-aws==4.30.0
         pulumi-hcloud==1.7.0
 
         # Needed for pulumi to detect plugins
