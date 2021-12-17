@@ -126,6 +126,10 @@ class Route53Zone(Zone):
             name=re.sub(r"[^0-9a-zA-Z]", "", self.name),
             status="ACTIVE",
         )
+        aws.route53.HostedZoneDnsSec(
+            f"DNSSEC-{self.name}",
+            hosted_zone_id=self.zone.zone_id,
+            signing_status="SIGNING")
         pulumi.export(f"{self.name}-DS", self.ksk.ds_record)
         pulumi.export(f"{self.name}-PK", self.ksk.public_key)
         return self
