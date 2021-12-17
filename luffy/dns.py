@@ -129,7 +129,8 @@ class Route53Zone(Zone):
         aws.route53.HostedZoneDnsSec(
             f"DNSSEC-{self.name}",
             hosted_zone_id=self.zone.zone_id,
-            signing_status="SIGNING")
+            signing_status="SIGNING",
+            opts=pulumi.ResourceOptions(depends_on=[self.ksk]))
         pulumi.export(f"{self.name}-DS", self.ksk.ds_record)
         pulumi.export(f"{self.name}-PK", self.ksk.public_key)
         return self
@@ -156,9 +157,8 @@ zone.TXT(
     "k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDWsJlP6+qLJS/RLvoNrMPRPrfzcQAuvZ1vUIJkqGauJ23zowQ9ni44XqzYyiBPx00c0QCQhO7oBEhnTeVGMcIfzNASeofZDfiu2dk7iOARpBeKT+EPJtXKS8cW0nz6cusANW7Mxa1Or1sUeV5+J0jFSAmeqWjginJPHJri7ZDA6QIDAQAB",
 )
 
-# bernat.im / bernat.ch
-for zone in [Route53Zone("bernat.ch"), Route53Zone("bernat.im")]:
-    zone.sign()
+# bernat.im (not signed) / bernat.ch (signed)
+for zone in [Route53Zone("bernat.ch").sign(), Route53Zone("bernat.im")]:
     zone.www("@").www("vincent")
     zone.fastmail_mx(subdomains=["vincent"])
     if zone.name == "bernat.ch":
