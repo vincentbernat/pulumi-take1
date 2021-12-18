@@ -19,10 +19,6 @@ let pkgs = import <nixpkgs> {};
               package version
               var Version string = "v0.0.0"
               EOF
-              go build -o bin/tfgen \
-                $(sed -n 's/^module //p' go.mod)/cmd/pulumi-tfgen-${name}
-              bin/tfgen schema --out cmd/pulumi-resource-${name}
-              VERSION=v0.0.0 go generate cmd/pulumi-resource-${name}/main.go
             '';
           } // args);
       in
