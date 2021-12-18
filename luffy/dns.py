@@ -130,7 +130,8 @@ class Route53Zone(Zone):
             f"DNSSEC-{self.name}",
             hosted_zone_id=self.zone.zone_id,
             signing_status="SIGNING",
-            opts=pulumi.ResourceOptions(depends_on=[self.ksk]))
+            opts=pulumi.ResourceOptions(depends_on=[self.ksk]),
+        )
         pulumi.export(f"{self.name}-DS", self.ksk.ds_record)
         pulumi.export(f"{self.name}-PK", self.ksk.public_key)
         return self

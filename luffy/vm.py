@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 import pulumi
 import pulumi_hcloud as hcloud
 
@@ -30,10 +31,18 @@ www_servers = [
     },
     {
         "server": hetzner_server("web04.luffy.cx", "1413514"),
-        "geolocations": [("continent", ["EU", "AF", "NA", "SA"])],
+        "geolocations": [("continent", ["EU", "AF"])],
     },
     {
         "server": hetzner_server("web05.luffy.cx", "15724596"),
+        "geolocations": [("continent", ["NA", "SA"])],
+    },
+    {
+        "server": SimpleNamespace(
+            _name="web06.luffy.cx",
+            ipv4_address="149.28.124.245",
+            ipv6_address="2001:19f0:5c01:1894::1",
+        ),
         "geolocations": [("continent", ["NA", "SA"])],
     },
 ]
