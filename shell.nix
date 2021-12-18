@@ -8,6 +8,34 @@ let pkgs = import <nixpkgs> {};
       pypiDataRev = "99799f6300b2dc4a4063dc3da032f5f169709567";
       pypiDataSha256 = "0kacxgr7cybd0py8d3mshr9h3wab9x3fvrlpr2fd240xg0v2k5gm";
     };
+    pulumi-plugins =
+      let builder = name: src': args: pkgs.buildGoModule (rec {
+            pname = "pulumi-plugin-${name}";
+            version = "0.0.0";
+            src = src';
+            modRoot = "./provider";
+            preBuild = ''
+              cat <<EOF > pkg/version/version.go
+              package version
+              var Version string = "v0.0.0"
+              EOF
+              go build -o bin/tfgen \
+                $(sed -n 's/^module //p' go.mod)/cmd/pulumi-tfgen-${name}
+              bin/tfgen schema --out cmd/pulumi-resource-${name}
+              VERSION=v0.0.0 go generate cmd/pulumi-resource-${name}/main.go
+            '';
+          } // args);
+      in
+        {
+          vultr = builder "vultr" (pkgs.fetchFromGitHub {
+            owner = "vincentbernat";
+            repo = "pulumi-vultr";
+            rev = "main";
+            sha256 = "sha256-Pl3bi3VUtw/SARMBNBthKQaXuVYzbRDHfhZ+g7/iXJc=";
+          }) {
+            vendorSha256 = "sha256-EkSZ2pGlyBLz+FL/0ViXmzKmWjcYqYYJ+rY18LF3Q4E=";
+          };
+        };
     pulumi-version = pkgs.pulumi-bin.version;
     pulumi-XXX-version = what: builtins.elemAt
       (pkgs.lib.flatten
@@ -42,6 +70,7 @@ pkgs.mkShell {
   name = "pulumi-take1";
   buildInputs = [
     pkgs.pulumi-bin
+    pulumi-plugins.vultr
     python-env
   ];
   shellHook = ''
