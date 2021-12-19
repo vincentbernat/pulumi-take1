@@ -8,12 +8,9 @@ import pulumi_vultr as vultr
 class Server:
     """Abstraction for a server."""
 
-    def __init__(self, name):
-        pulumi.export(f"{name}-ipv4", self.ipv4_address)
-        pulumi.export(f"{name}-ipv6", self.ipv6_address)
-
 
 class HetznerServer(Server):
+    kind = "hetzner"
     def __init__(self, name, id):
         """An Hetzner server (we import them)"""
         # We do not create them. There is a problem with importing
@@ -34,10 +31,10 @@ class HetznerServer(Server):
             ip_address=self.ipv6_address,
             dns_ptr=name,
         )
-        super().__init__(name)
 
 
 class VultrServer(Server):
+    kind = "vultr"
     def __init__(self, name, **kwargs):
         """A Vultr server."""
         self.name = name
@@ -56,7 +53,6 @@ class VultrServer(Server):
             ip=self.ipv6_address.apply(lambda x: ipaddress.ip_address(x).exploded),
             reverse=name,
         )
-        super().__init__(name)
 
 
 # Each location should be covered by at least two servers...
@@ -78,3 +74,6 @@ www_servers = [
         "geolocations": [("continent", ["NA", "SA"])],
     },
 ]
+pulumi.export("www-servers", [{k: getattr(x['server'], k)
+                               for k in ("name", "kind", "ipv4_address", "ipv6_address")}
+                              for x in www_servers])

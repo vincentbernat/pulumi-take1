@@ -21,3 +21,11 @@ default (and only) stack.
 pulumi login file://.
 pulumi stack select dev
 ```
+
+## Interaction with NixOps
+
+When there is a change, the stack output should be exported to NixOps:
+
+```
+pulumi stack output --json > ~-automation/nixops-take1/pulumi.json
+```

@@ -49,7 +49,6 @@ class Route53Zone(Zone):
     def __init__(self, name, **kwargs):
         self.name = name
         self.zone = aws.route53.Zone(name, name=name, **kwargs)
-        pulumi.export(f"{self.name}-NS", self.zone.name_servers)
 
     def record(self, name, rrtype, records, ttl=86400, **more):
         """Create a record."""
@@ -132,8 +131,6 @@ class Route53Zone(Zone):
             signing_status="SIGNING",
             opts=pulumi.ResourceOptions(depends_on=[self.ksk]),
         )
-        pulumi.export(f"{self.name}-DS", self.ksk.ds_record)
-        pulumi.export(f"{self.name}-PK", self.ksk.public_key)
         return self
 
 
