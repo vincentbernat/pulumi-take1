@@ -75,7 +75,7 @@ class Route53Zone(Zone):
         """Create records for web servers."""
         ttl = 60 * 60 * 2
         servers = {
-            server["server"]._name: {
+            server["server"].name: {
                 "A": server["server"].ipv4_address,
                 "AAAA": server["server"].ipv6_address,
                 "geolocations": server["geolocations"],
@@ -175,7 +175,7 @@ zone.www("@").www("media").www("www").www("haproxy")
 zone.CNAME("comments", "web03.luffy.cx.")
 # hosts
 for server in www_servers:
-    name = server["server"]._name
+    name = server["server"].name
     if not name.endswith(".luffy.cx"):
         continue
     name = name.removesuffix(".luffy.cx")

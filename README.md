@@ -14,8 +14,10 @@ Use `nix-shell` to enter the appropriate environment.
 
 ## Setup
 
-Use the local filesystem to store states.
+Use the local filesystem to store states and select `dev` as the
+default (and only) stack.
 
 ```
 pulumi login file://.
+pulumi stack select dev
 ```
