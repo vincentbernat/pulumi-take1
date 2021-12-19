@@ -34,7 +34,7 @@ let pkgs = import <nixpkgs> {};
             owner = "vincentbernat";
             repo = "pulumi-vultr";
             rev = "main";
-            sha256 = "sha256-Pl3bi3VUtw/SARMBNBthKQaXuVYzbRDHfhZ+g7/iXJc=";
+            sha256 = "sha256-uCFa9MM6iniNOoUFp1h6pegQ0PhvjTb6fi8/5xALsSc=";
           }) {
             vendorSha256 = "sha256-EkSZ2pGlyBLz+FL/0ViXmzKmWjcYqYYJ+rY18LF3Q4E=";
           };
