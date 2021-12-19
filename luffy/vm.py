@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+import ipaddress
 import pulumi
 import pulumi_hcloud as hcloud
 import pulumi_vultr as vultr
@@ -20,13 +21,13 @@ class HetznerServer(Server):
         hcloud.Rdns(
             f"rdns4-{name}",
             server_id=self.obj.id.apply(int),
-            ip_address=self.obj.ipv4_address,
+            ip_address=self.ipv4_address,
             dns_ptr=name,
         )
         hcloud.Rdns(
             f"rdns6-{name}",
             server_id=self.obj.id.apply(int),
-            ip_address=self.obj.ipv6_address,
+            ip_address=self.ipv6_address,
             dns_ptr=name,
         )
 
@@ -37,7 +38,19 @@ class VultrServer(Server):
         self.name = name
         self.obj = vultr.Instance("web06.luffy.cx", plan="vc2-1c-1gb", region="ord")
         self.ipv4_address = self.obj.main_ip
-        self.ipv6_address = self.obj.v6_network.apply(lambda x: f"{x}1")
+        self.ipv6_address = self.obj.v6_main_ip
+        vultr.ReverseIpv4(
+            f"rdns4-{name}",
+            instance_id=self.obj.id,
+            ip=self.ipv4_address,
+            reverse=name,
+        )
+        vultr.ReverseIpv6(
+            f"rdns6-{name}",
+            instance_id=self.obj.id,
+            ip=self.ipv6_address.apply(lambda x: ipaddress.ip_address(x).exploded),
+            reverse=name,
+        )
 
 
 # Each location should be covered by at least two servers...
