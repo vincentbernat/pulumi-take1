@@ -33,10 +33,10 @@ class HetznerServer(Server):
 
 
 class VultrServer(Server):
-    def __init__(self, name):
+    def __init__(self, name, **kwargs):
         """A Vultr server."""
         self.name = name
-        self.obj = vultr.Instance("web06.luffy.cx", plan="vc2-1c-1gb", region="ord")
+        self.obj = vultr.Instance(name, **kwargs)
         self.ipv4_address = self.obj.main_ip
         self.ipv6_address = self.obj.v6_main_ip
         vultr.ReverseIpv4(
@@ -68,7 +68,7 @@ www_servers = [
         "geolocations": [("continent", ["NA", "SA"])],
     },
     {
-        "server": VultrServer("web06.luffy.cx"),
+        "server": VultrServer("web06.luffy.cx", plan="vc2-1c-1gb", region="ord"),
         "geolocations": [("continent", ["NA", "SA"])],
     },
 ]
