@@ -1,4 +1,5 @@
 import re
+import json
 import collections
 import pulumi
 import pulumi_aws as aws
@@ -163,17 +164,11 @@ for zone in [Route53Zone("bernat.ch").sign(), Route53Zone("bernat.im")]:
         zone.CNAME("4unklrhyt7lw.vincent", "gv-qcgpdhlvhtgedt.dv.googlehosted.com.")
 
 # luffy.cx
-zone = Route53Zone("luffy.cx").sign()
+zone = luffy_cx = Route53Zone("luffy.cx").sign()
 zone.fastmail_mx()
-# y.luffy.cx DDNS
-y_luffy_cx = Route53Zone("y.luffy.cx").sign()
-zone.record("y", "NS", records=y_luffy_cx.zone.name_servers)
-zone.record("y", "DS", records=[y_luffy_cx.ksk.ds_record])
-zone.CNAME("eizo", "eizo.y.luffy.cx.")
-# services
 zone.www("@").www("media").www("www").www("haproxy")
 zone.CNAME("comments", "web03.luffy.cx.")
-# hosts
+zone.CNAME("eizo", "eizo.y.luffy.cx.")
 for server in all_servers:
     name = server["server"].name
     if not name.endswith(".luffy.cx"):
@@ -181,3 +176,36 @@ for server in all_servers:
     name = name.removesuffix(".luffy.cx")
     zone.A(name, [server["server"].ipv4_address])
     zone.AAAA(name, [server["server"].ipv6_address])
+
+# y.luffy.cx DDNS
+zone = Route53Zone("y.luffy.cx").sign()
+luffy_cx.record("y", "NS", records=zone.zone.name_servers)
+luffy_cx.record("y", "DS", records=[zone.ksk.ds_record])
+user = aws.iam.User("DDNS", name="DDNS", path="/")
+aws.iam.UserPolicy(
+    "DDNS-y.luffy.cx",
+    name="AmazonRoute53-y.luffy.cx-FullAccess",
+    policy=zone.zone.arn.apply(
+        lambda arn: json.dumps(
+            {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "route53:ChangeResourceRecordSets",
+                            "route53:ListResourceRecordSets",
+                        ],
+                        "Resource": [arn],
+                    },
+                    {
+                        "Effect": "Allow",
+                        "Action": ["route53:ListHostedZones"],
+                        "Resource": "*",
+                    },
+                ],
+            },
+        )
+    ),
+    user=user,
+)
