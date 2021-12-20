@@ -3,7 +3,7 @@ import collections
 import pulumi
 import pulumi_aws as aws
 from .kms import dns_cmk
-from .vm import www_servers
+from .vm import all_servers
 
 
 class Zone:
@@ -80,8 +80,8 @@ class Route53Zone(Zone):
                 "AAAA": server["server"].ipv6_address,
                 "geolocations": server["geolocations"],
             }
-            for server in www_servers
-            if not server.get("disabled")
+            for server in all_servers
+            if not server.get("disabled") and "web" in server.get("tags", [])
         }
         # Normalize the data a bit
         geolocations = set()
@@ -174,7 +174,7 @@ zone.CNAME("eizo", "eizo.y.luffy.cx.")
 zone.www("@").www("media").www("www").www("haproxy")
 zone.CNAME("comments", "web03.luffy.cx.")
 # hosts
-for server in www_servers:
+for server in all_servers:
     name = server["server"].name
     if not name.endswith(".luffy.cx"):
         continue

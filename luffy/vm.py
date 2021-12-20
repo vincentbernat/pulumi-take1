@@ -10,7 +10,8 @@ class Server:
 
 
 class HetznerServer(Server):
-    kind = "hetzner"
+    hardware = "hetzner"
+
     def __init__(self, name, id):
         """An Hetzner server (we import them)"""
         # We do not create them. There is a problem with importing
@@ -34,7 +35,8 @@ class HetznerServer(Server):
 
 
 class VultrServer(Server):
-    kind = "vultr"
+    hardware = "vultr"
+
     def __init__(self, name, **kwargs):
         """A Vultr server."""
         self.name = name
@@ -56,24 +58,38 @@ class VultrServer(Server):
 
 
 # Each location should be covered by at least two servers...
-www_servers = [
+all_servers = [
     {
         "server": HetznerServer("web03.luffy.cx", "1041986"),
         "geolocations": [("continent", ["EU", "AF"])],
+        "tags": ["web", "isso"],
     },
     {
         "server": HetznerServer("web04.luffy.cx", "1413514"),
         "geolocations": [("continent", ["EU", "AF"])],
+        "tags": ["web"],
     },
     {
         "server": HetznerServer("web05.luffy.cx", "15724596"),
         "geolocations": [("continent", ["NA", "SA"])],
+        "tags": ["web"],
     },
     {
         "server": VultrServer("web06.luffy.cx", plan="vc2-1c-1gb", region="ord"),
         "geolocations": [("continent", ["NA", "SA"])],
+        "tags": ["web"],
     },
 ]
-pulumi.export("www-servers", [{k: getattr(x['server'], k)
-                               for k in ("name", "kind", "ipv4_address", "ipv6_address")}
-                              for x in www_servers])
+pulumi.export(
+    "all-servers",
+    [
+        {
+            "tags": x["tags"],
+            **{
+                k: getattr(x["server"], k)
+                for k in ("name", "hardware", "ipv4_address", "ipv6_address")
+            },
+        }
+        for x in all_servers
+    ],
+)
