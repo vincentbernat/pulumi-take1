@@ -39,20 +39,13 @@ class Zone:
                 --protect=false \
                 --provider gandi=urn:pulumi:dev::pulumi-take1::pulumi:providers:gandi::gandi-vb
         """
-        # Read current contacts
-        current = gandi.domain.Domain.get(
-            f"_{self.name}",
-            id=self.name,
-            opts=pulumi.ResourceOptions(provider=provider),
-        )
-        # Reuse them
         ignored = ["admins", "billings", "owners", "teches"]
         gandi.domain.Domain(
             self.name,
             name=self.name,
             nameservers=self.zone.name_servers,
-            opts=pulumi.ResourceOptions(provider=provider),
-            **{k: getattr(current, k) for k in ignored},
+            opts=pulumi.ResourceOptions(provider=provider, ignore_changes=ignored),
+            **{k: [] for k in ignored},
         )
         return self
 
