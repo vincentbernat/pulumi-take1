@@ -22,6 +22,14 @@ pulumi login file://.
 pulumi stack select dev
 ```
 
+## Configuration
+
+```
+pulumi config set aws:region us-east-1
+pulumi config set --secret gandi-vb
+pulumi config set --secret gandi-rb
+```
+
 ## Interaction with NixOps
 
 When there is a change, the stack output should be exported to NixOps:
