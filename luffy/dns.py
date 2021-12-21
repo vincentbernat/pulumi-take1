@@ -168,6 +168,7 @@ zone = luffy_cx = Route53Zone("luffy.cx").sign()
 zone.fastmail_mx()
 zone.www("@").www("media").www("www").www("haproxy")
 zone.CNAME("comments", "web03.luffy.cx.")
+zone.CNAME("eizo", "eizo.y.luffy.cx.")
 for server in all_servers:
     name = server["server"].name
     if not name.endswith(".luffy.cx"):
