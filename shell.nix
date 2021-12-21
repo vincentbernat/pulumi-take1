@@ -38,6 +38,14 @@ let pkgs = import <nixpkgs> {};
           }) {
             vendorSha256 = "sha256-EkSZ2pGlyBLz+FL/0ViXmzKmWjcYqYYJ+rY18LF3Q4E=";
           };
+          gandi = builder "gandi" (pkgs.fetchFromGitHub {
+            owner = "vincentbernat";
+            repo = "pulumi-gandi";
+            rev = "main";
+            sha256 = "sha256-R3A3bcneUIlBs5noX38dBCmoKBN35eRCuQt7GG49GiU=";
+          }) {
+            vendorSha256 = "sha256-C6fpEIakhrmOIFEKXw08rpSyKgMrobfRAfMRPJDsDuM=";
+          };
         };
     # Grab versions we got to match for Python
     pulumi-version = pkgs.pulumi-bin.version;
@@ -66,6 +74,7 @@ let pkgs = import <nixpkgs> {};
       '';
       packagesExtra = [
         pulumi-plugins.vultr.python
+        pulumi-plugins.gandi.python
       ];
       providers = {
         pip = "nixpkgs";
@@ -79,6 +88,7 @@ pkgs.mkShell {
   buildInputs = [
     pkgs.pulumi-bin
     pulumi-plugins.vultr.plugin
+    pulumi-plugins.gandi.plugin
     python-env
   ];
   shellHook = ''

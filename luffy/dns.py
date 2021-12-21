@@ -3,8 +3,12 @@ import json
 import collections
 import pulumi
 import pulumi_aws as aws
+import pulumi_gandi as gandi
 from .kms import dns_cmk
 from .vm import all_servers
+
+gandi_vb = gandi.Provider("gandi-vb", key=pulumi.Config().get_secret("gandi-vb"))
+gandi_rb = gandi.Provider("gandi-rb", key=pulumi.Config().get_secret("gandi-rb"))
 
 
 class Zone:
@@ -25,6 +29,32 @@ class Zone:
 
     def SRV(self, name, records, **kwargs):
         return self.record(name, "SRV", records, **kwargs)
+
+    def registrar(self, provider):
+        """Register zone to Gandi.
+
+        Import resource with::
+
+            pulumi import gandi:domain/domain:Domain enxio.fr enxio.fr \
+                --protect=false \
+                --provider gandi=urn:pulumi:dev::pulumi-take1::pulumi:providers:gandi::gandi-vb
+        """
+        # Read current contacts
+        current = gandi.domain.Domain.get(
+            f"_{self.name}",
+            id=self.name,
+            opts=pulumi.ResourceOptions(provider=provider),
+        )
+        # Reuse them
+        ignored = ["admins", "billings", "owners", "teches"]
+        gandi.domain.Domain(
+            self.name,
+            name=self.name,
+            nameservers=self.zone.name_servers,
+            opts=pulumi.ResourceOptions(provider=provider),
+            **{k: getattr(current, k) for k in ignored},
+        )
+        return self
 
     def fastmail_mx(self, subdomains=[]):
         """Create records for MX with FastMail."""
@@ -136,12 +166,12 @@ class Route53Zone(Zone):
 
 
 # enxio.fr
-zone = Route53Zone("enxio.fr").sign()
+zone = Route53Zone("enxio.fr").sign().registrar(gandi_vb)
 zone.www("@").www("www").www("media")
 zone.fastmail_mx()
 
 # une-oasis-une-ecole.fr
-zone = Route53Zone("une-oasis-une-ecole.fr").sign()
+zone = Route53Zone("une-oasis-une-ecole.fr").sign().registrar(gandi_rb)
 zone.www("@").www("www").www("media")
 zone.MX("@", ["10 spool.mail.gandi.net.", "50 fb.mail.gandi.net."])
 zone.TXT(
@@ -158,13 +188,14 @@ zone.TXT(
 
 # bernat.im (not signed) / bernat.ch (signed)
 for zone in [Route53Zone("bernat.ch").sign(), Route53Zone("bernat.im")]:
+    zone.registrar(gandi_vb)
     zone.www("@").www("vincent")
     zone.fastmail_mx(subdomains=["vincent"])
     if zone.name == "bernat.ch":
         zone.CNAME("4unklrhyt7lw.vincent", "gv-qcgpdhlvhtgedt.dv.googlehosted.com.")
 
 # luffy.cx
-zone = luffy_cx = Route53Zone("luffy.cx").sign()
+zone = luffy_cx = Route53Zone("luffy.cx").sign().registrar(gandi_vb)
 zone.fastmail_mx()
 zone.www("@").www("media").www("www").www("haproxy")
 zone.CNAME("comments", "web03.luffy.cx.")
