@@ -175,10 +175,11 @@ class Route53Zone(Zone):
                             {
                                 "Effect": "Allow",
                                 "Action": [
+                                    "route53:GetChange",
                                     "route53:ChangeResourceRecordSets",
                                     "route53:ListResourceRecordSets",
                                 ],
-                                "Resource": [arn],
+                                "Resource": ["arn:aws:route53:::change/*", arn],
                             },
                             {
                                 "Effect": "Allow",
@@ -248,3 +249,4 @@ zone = Route53Zone("acme.luffy.cx").sign()
 luffy_cx.record("acme", "NS", records=zone.zone.name_servers)
 luffy_cx.record("acme", "DS", records=[zone.ksk.ds_record])
 zone.allow_user("ACME")
+pulumi.export("acme-zone", zone.zone.zone_id)
