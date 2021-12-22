@@ -47,6 +47,15 @@ class Zone:
             opts=pulumi.ResourceOptions(provider=provider, ignore_changes=ignored),
             **{k: [] for k in ignored},
         )
+        if self.ksk:
+            gandi.domain.DnssecKey(
+                self.name,
+                domain=self.name,
+                algorithm=self.ksk.signing_algorithm_type,
+                public_key=self.ksk.public_key,
+                type="ksk",
+                opts=pulumi.ResourceOptions(provider=provider),
+            )
         return self
 
     def fastmail_mx(self, subdomains=[]):
@@ -73,6 +82,7 @@ class Route53Zone(Zone):
     def __init__(self, name, **kwargs):
         self.name = name
         self.zone = aws.route53.Zone(name, name=name, **kwargs)
+        self.ksk = None
 
     def record(self, name, rrtype, records, ttl=86400, **more):
         """Create a record."""
@@ -217,15 +227,17 @@ zone.TXT(
 )
 
 # bernat.im (not signed) / bernat.ch (signed)
-for zone in [Route53Zone("bernat.ch").sign(), Route53Zone("bernat.im")]:
-    zone.registrar(gandi_vb)
+for zone in [
+    Route53Zone("bernat.ch").registrar(gandi_vb).sign(),
+    Route53Zone("bernat.im").registrar(gandi_vb),
+]:
     zone.www("@").www("vincent")
     zone.fastmail_mx(subdomains=["vincent"])
     if zone.name == "bernat.ch":
         zone.CNAME("4unklrhyt7lw.vincent", "gv-qcgpdhlvhtgedt.dv.googlehosted.com.")
 
 # luffy.cx
-zone = luffy_cx = Route53Zone("luffy.cx").sign().registrar(gandi_vb)
+zone = luffy_cx = Route53Zone("luffy.cx").registrar(gandi_vb).sign()
 zone.fastmail_mx()
 zone.www("@").www("media").www("www").www("haproxy")
 zone.CNAME("comments", "web03.luffy.cx.")

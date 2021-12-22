@@ -42,9 +42,9 @@ let pkgs = import <nixpkgs> {};
             owner = "vincentbernat";
             repo = "pulumi-gandi";
             rev = "main";
-            sha256 = "sha256-R3A3bcneUIlBs5noX38dBCmoKBN35eRCuQt7GG49GiU=";
+            sha256 = "sha256-92ZsFcThqFh8jGz6hKMXFq2r6TOV41r+xlc5X4f8GT8=";
           }) {
-            vendorSha256 = "sha256-C6fpEIakhrmOIFEKXw08rpSyKgMrobfRAfMRPJDsDuM=";
+            vendorSha256 = "sha256-LjUxilWiVyzqjhRSfJ+tnxkj3JWb1o7xs1zBns1cTHA=";
           };
         };
     # Grab versions we got to match for Python
