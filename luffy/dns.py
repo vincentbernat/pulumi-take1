@@ -138,6 +138,10 @@ class Route53Zone(Zone):
                     geolocation_routing_policies=[dict([geoloc])],
                 )
         self.record(name, "CAA", ['0 issue "buypass.com"', '0 issuewild ";"'])
+        if name == "@":
+            self.CNAME("_acme-challenge", f"{self.name}.acme.luffy.cx.")
+        else:
+            self.CNAME(f"_acme-challenge.{name}", f"{name}.{self.name}.acme.luffy.cx.")
         return self
 
     def sign(self):
@@ -154,6 +158,38 @@ class Route53Zone(Zone):
             hosted_zone_id=self.zone.zone_id,
             signing_status="SIGNING",
             opts=pulumi.ResourceOptions(depends_on=[self.ksk]),
+        )
+        return self
+
+    def allow_user(self, user_name):
+        """Create a user allowed to make modifications to the zone."""
+        user = aws.iam.User(user_name, name=user_name, path="/")
+        aws.iam.UserPolicy(
+            f"{user_name}-{self.name}",
+            name=f"AmazonRoute53-{self.name}-FullAccess",
+            policy=self.zone.arn.apply(
+                lambda arn: json.dumps(
+                    {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "route53:ChangeResourceRecordSets",
+                                    "route53:ListResourceRecordSets",
+                                ],
+                                "Resource": [arn],
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": ["route53:ListHostedZones"],
+                                "Resource": "*",
+                            },
+                        ],
+                    },
+                )
+            ),
+            user=user,
         )
         return self
 
@@ -201,35 +237,14 @@ for server in all_servers:
     zone.A(name, [server["server"].ipv4_address])
     zone.AAAA(name, [server["server"].ipv6_address])
 
-# y.luffy.cx DDNS
+# y.luffy.cx (DDNS)
 zone = Route53Zone("y.luffy.cx").sign()
 luffy_cx.record("y", "NS", records=zone.zone.name_servers)
 luffy_cx.record("y", "DS", records=[zone.ksk.ds_record])
-user = aws.iam.User("DDNS", name="DDNS", path="/")
-aws.iam.UserPolicy(
-    "DDNS-y.luffy.cx",
-    name="AmazonRoute53-y.luffy.cx-FullAccess",
-    policy=zone.zone.arn.apply(
-        lambda arn: json.dumps(
-            {
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Effect": "Allow",
-                        "Action": [
-                            "route53:ChangeResourceRecordSets",
-                            "route53:ListResourceRecordSets",
-                        ],
-                        "Resource": [arn],
-                    },
-                    {
-                        "Effect": "Allow",
-                        "Action": ["route53:ListHostedZones"],
-                        "Resource": "*",
-                    },
-                ],
-            },
-        )
-    ),
-    user=user,
-)
+zone.allow_user("DDNS")
+
+# acme.luffy.cx (ACME DNS-01 challenges)
+zone = Route53Zone("acme.luffy.cx").sign()
+luffy_cx.record("acme", "NS", records=zone.zone.name_servers)
+luffy_cx.record("acme", "DS", records=[zone.ksk.ds_record])
+zone.allow_user("ACME")
