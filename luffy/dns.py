@@ -237,7 +237,7 @@ for zone in [
         zone.CNAME("4unklrhyt7lw.vincent", "gv-qcgpdhlvhtgedt.dv.googlehosted.com.")
 
 # luffy.cx
-zone = luffy_cx = Route53Zone("luffy.cx").registrar(gandi_vb).sign()
+zone = luffy_cx = Route53Zone("luffy.cx").sign().registrar(gandi_vb)
 zone.fastmail_mx()
 zone.www("@").www("media").www("www").www("haproxy")
 zone.CNAME("comments", "web03.luffy.cx.")
