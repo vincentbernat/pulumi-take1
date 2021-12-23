@@ -33,15 +33,15 @@ let pkgs = import <nixpkgs> {};
           vultr = builder "vultr" (pkgs.fetchFromGitHub {
             owner = "vincentbernat";
             repo = "pulumi-vultr";
-            rev = "main";
-            sha256 = "sha256-uCFa9MM6iniNOoUFp1h6pegQ0PhvjTb6fi8/5xALsSc=";
+            rev = "171c75f59d16";
+            sha256 = "sha256-MxBgrs3hunZ1ub1GlhYup2Zw/Uypws3xMYmvbDwjtbU=";
           }) {
             vendorSha256 = "sha256-EkSZ2pGlyBLz+FL/0ViXmzKmWjcYqYYJ+rY18LF3Q4E=";
           };
           gandi = builder "gandi" (pkgs.fetchFromGitHub {
             owner = "vincentbernat";
             repo = "pulumi-gandi";
-            rev = "main";
+            rev = "57a01e67ed3e";
             sha256 = "sha256-92ZsFcThqFh8jGz6hKMXFq2r6TOV41r+xlc5X4f8GT8=";
           }) {
             vendorSha256 = "sha256-LjUxilWiVyzqjhRSfJ+tnxkj3JWb1o7xs1zBns1cTHA=";
