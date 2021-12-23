@@ -22,6 +22,7 @@ let pkgs = import <nixpkgs> {};
                 var Version string = "v0.0.0"
                 EOF
               '';
+              subPackages = [ "cmd/pulumi-resource-${name}" ];
             } // args);
             python = mach-nix.buildPythonPackage {
               pname = "pulumi_${name}";
