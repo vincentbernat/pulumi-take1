@@ -227,10 +227,8 @@ zone.TXT(
 )
 
 # bernat.im (not signed) / bernat.ch (signed)
-for zone in [
-    Route53Zone("bernat.ch").registrar(gandi_vb).sign(),
-    Route53Zone("bernat.im").registrar(gandi_vb),
-]:
+for zone in [Route53Zone("bernat.ch").sign(), Route53Zone("bernat.im")]:
+    zone.registrar(gandi_vb)
     zone.www("@").www("vincent")
     zone.fastmail_mx(subdomains=["vincent"])
     if zone.name == "bernat.ch":
