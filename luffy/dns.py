@@ -72,8 +72,9 @@ class Zone:
         for dk in ("mesmtp", "fm1", "fm2", "fm3"):
             self.CNAME(f"{dk}._domainkey", f"{dk}.{self.name}.dkim.fmhosted.com.")
         self.SRV("_submission._tcp", "0 1 587 smtp.fastmail.com.")
-        self.SRV("_imap._tcp", "0 0 0 .")
-        self.SRV("_imaps._tcp", "0 1 993 imap.fastmail.com.")
+        for service, port in (("imap", 993), ("carddav", 443), ("caldav", 443)):
+            self.SRV(f"_{service}._tcp", "0 0 0 .")
+            self.SRV(f"_{service}s._tcp", f"0 1 {port} {service}.fastmail.com.")
         self.TXT("_dmarc", "v=DMARC1; p=none; sp=none")
         return self
 
