@@ -71,11 +71,15 @@ class Zone:
         self.TXT("@", "v=spf1 include:spf.messagingengine.com ~all")
         for dk in ("mesmtp", "fm1", "fm2", "fm3"):
             self.CNAME(f"{dk}._domainkey", f"{dk}.{self.name}.dkim.fmhosted.com.")
+        self.TXT("_dmarc", "v=DMARC1; p=none; sp=none")
+        return self
+
+    def fastmail_services(self):
+        """Create service records for Fastmail."""
         self.SRV("_submission._tcp", "0 1 587 smtp.fastmail.com.")
         for service, port in (("imap", 993), ("carddav", 443), ("caldav", 443)):
             self.SRV(f"_{service}._tcp", "0 0 0 .")
             self.SRV(f"_{service}s._tcp", f"0 1 {port} {service}.fastmail.com.")
-        self.TXT("_dmarc", "v=DMARC1; p=none; sp=none")
         return self
 
 
@@ -233,6 +237,7 @@ for zone in [Route53Zone("bernat.ch").sign(), Route53Zone("bernat.im")]:
     zone.www("@").www("vincent")
     zone.fastmail_mx(subdomains=["vincent"])
     if zone.name == "bernat.ch":
+        zone.fastmail_services()
         zone.CNAME("4unklrhyt7lw.vincent", "gv-qcgpdhlvhtgedt.dv.googlehosted.com.")
 
 # luffy.cx
