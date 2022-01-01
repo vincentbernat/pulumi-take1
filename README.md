@@ -10,7 +10,8 @@ with it. Servers are then managed using NixOps. Check my
 
 ## Shell
 
-Use `nix-shell` to enter the appropriate environment.
+Use `nix develop -c $SHELL` to enter the appropriate environment. You
+need to have Flakes support for this to work.
 
 ## Setup
 
