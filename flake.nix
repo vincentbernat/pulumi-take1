@@ -2,16 +2,11 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs";
     flake-utils.url = "github:numtide/flake-utils";
-    pypi-deps-db = {
-      url = github:DavHau/pypi-deps-db/99799f6300b2dc4a4063dc3da032f5f169709567;
-      flake = false;
-    };
     mach-nix = {
       url = "github:DavHau/mach-nix?ref=3.3.0";
       inputs = {
         nixpkgs.follows = "nixpkgs";
         flake-utils.follows = "flake-utils";
-        pypi-deps-db.follows = "pypi-deps-db";
       };
     };
     vultr-provider = {
@@ -27,11 +22,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages."${system}";
-        mach-nix = import inputs.mach-nix {
-          inherit pkgs;
-          pypiDataRev = inputs.pypi-deps-db.rev;
-          pypiDataSha256 = inputs.pypi-deps-db.narHash;
-        };
+        mach-nix = inputs.mach-nix.lib."${system}";
         # Custom providers (pulumi+python)
         pulumi-providers =
           let builder = name: src': args: {
@@ -76,17 +67,17 @@
         # Python environment
         python-env = mach-nix.mkPython {
           requirements = ''
-        pulumi==${pulumi-version}
-        pulumi-aws==${pulumi-aws-version}
-        pulumi-hcloud==${pulumi-hcloud-version}
+            pulumi==${pulumi-version}
+            pulumi-aws==${pulumi-aws-version}
+            pulumi-hcloud==${pulumi-hcloud-version}
 
-        # Needed for pulumi to detect providers
-        pip
-        setuptools
+            # Needed for pulumi to detect providers
+            pip
+            setuptools
 
-        # Other tools
-        black
-      '';
+            # Other tools
+            black
+          '';
           packagesExtra = [
             pulumi-providers.vultr.python
             pulumi-providers.gandi.python
