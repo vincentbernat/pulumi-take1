@@ -15,6 +15,22 @@
         "type": "github"
       }
     },
+    "gandi-provider": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1640201859,
+        "narHash": "sha256-92ZsFcThqFh8jGz6hKMXFq2r6TOV41r+xlc5X4f8GT8=",
+        "owner": "vincentbernat",
+        "repo": "pulumi-gandi",
+        "rev": "57a01e67ed3e5e206665d16b21f047f0ce08cb97",
+        "type": "github"
+      },
+      "original": {
+        "owner": "vincentbernat",
+        "repo": "pulumi-gandi",
+        "type": "github"
+      }
+    },
     "mach-nix": {
       "inputs": {
         "flake-utils": [
@@ -77,9 +93,27 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
+        "gandi-provider": "gandi-provider",
         "mach-nix": "mach-nix",
         "nixpkgs": "nixpkgs",
-        "pypi-deps-db": "pypi-deps-db"
+        "pypi-deps-db": "pypi-deps-db",
+        "vultr-provider": "vultr-provider"
+      }
+    },
+    "vultr-provider": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1640072316,
+        "narHash": "sha256-MxBgrs3hunZ1ub1GlhYup2Zw/Uypws3xMYmvbDwjtbU=",
+        "owner": "vincentbernat",
+        "repo": "pulumi-vultr",
+        "rev": "171c75f59d169a62e5486bf9e7f6f421bbe0b7c8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "vincentbernat",
+        "repo": "pulumi-vultr",
+        "type": "github"
       }
     }
   },

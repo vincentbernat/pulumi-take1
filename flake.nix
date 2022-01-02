@@ -14,6 +14,14 @@
         pypi-deps-db.follows = "pypi-deps-db";
       };
     };
+    vultr-provider = {
+      url = "github:vincentbernat/pulumi-vultr";
+      flake = false;
+    };
+    gandi-provider = {
+      url = "github:vincentbernat/pulumi-gandi";
+      flake = false;
+    };
   };
   outputs = { self, nixpkgs, flake-utils, ...}@inputs:
     flake-utils.lib.eachDefaultSystem (system:
@@ -24,11 +32,11 @@
           pypiDataRev = inputs.pypi-deps-db.rev;
           pypiDataSha256 = inputs.pypi-deps-db.narHash;
         };
-        # Custom plugins (pulumi+python)
-        pulumi-plugins =
+        # Custom providers (pulumi+python)
+        pulumi-providers =
           let builder = name: src': args: {
                 plugin = pkgs.buildGoModule (rec {
-                  pname = "pulumi-plugin-${name}";
+                  pname = "pulumi-provider-${name}";
                   version = "0.0.0";
                   src = src';
                   modRoot = "./provider";
@@ -47,20 +55,10 @@
               };
           in
             {
-              vultr = builder "vultr" (pkgs.fetchFromGitHub {
-                owner = "vincentbernat";
-                repo = "pulumi-vultr";
-                rev = "171c75f59d16";
-                sha256 = "sha256-MxBgrs3hunZ1ub1GlhYup2Zw/Uypws3xMYmvbDwjtbU=";
-              }) {
+              vultr = builder "vultr" inputs.vultr-provider {
                 vendorSha256 = "sha256-EkSZ2pGlyBLz+FL/0ViXmzKmWjcYqYYJ+rY18LF3Q4E=";
               };
-              gandi = builder "gandi" (pkgs.fetchFromGitHub {
-                owner = "vincentbernat";
-                repo = "pulumi-gandi";
-                rev = "57a01e67ed3e";
-                sha256 = "sha256-92ZsFcThqFh8jGz6hKMXFq2r6TOV41r+xlc5X4f8GT8=";
-              }) {
+              gandi = builder "gandi" inputs.gandi-provider {
                 vendorSha256 = "sha256-LjUxilWiVyzqjhRSfJ+tnxkj3JWb1o7xs1zBns1cTHA=";
               };
             };
@@ -82,7 +80,7 @@
         pulumi-aws==${pulumi-aws-version}
         pulumi-hcloud==${pulumi-hcloud-version}
 
-        # Needed for pulumi to detect plugins
+        # Needed for pulumi to detect providers
         pip
         setuptools
 
@@ -90,8 +88,8 @@
         black
       '';
           packagesExtra = [
-            pulumi-plugins.vultr.python
-            pulumi-plugins.gandi.python
+            pulumi-providers.vultr.python
+            pulumi-providers.gandi.python
           ];
           providers = {
             pip = "nixpkgs";
@@ -104,8 +102,8 @@
           name = "pulumi-take1";
           buildInputs = [
             pkgs.pulumi-bin
-            pulumi-plugins.vultr.plugin
-            pulumi-plugins.gandi.plugin
+            pulumi-providers.vultr.plugin
+            pulumi-providers.gandi.plugin
             python-env
           ];
           shellHook = ''
