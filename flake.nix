@@ -23,6 +23,17 @@
       let
         pkgs = nixpkgs.legacyPackages."${system}";
         mach-nix = inputs.mach-nix.lib."${system}";
+        # Grab versions we got to match for Python
+        pulumi-version = pkgs.pulumi-bin.version;
+        pulumi-XXX-version = what: builtins.elemAt
+          (pkgs.lib.flatten
+            (builtins.filter (x: x != null)
+              (map
+                (x: builtins.match "^pulumi-resource-${what}-v([0-9.]+)-linux.*" x.name)
+                pkgs.pulumi-bin.srcs)))
+          0;
+        pulumi-aws-version = pulumi-XXX-version "aws";
+        pulumi-hcloud-version = pulumi-XXX-version "hcloud";
         # Custom providers (pulumi+python)
         pulumi-providers =
           let builder = name: src': args: {
@@ -42,6 +53,7 @@
                 python = mach-nix.buildPythonPackage {
                   pname = "pulumi_${name}";
                   src = "${src'}/sdk/python";
+                  requirementsExtra = "pulumi==${pulumi-version}";
                 };
               };
           in
@@ -53,17 +65,6 @@
                 vendorSha256 = "sha256-LjUxilWiVyzqjhRSfJ+tnxkj3JWb1o7xs1zBns1cTHA=";
               };
             };
-        # Grab versions we got to match for Python
-        pulumi-version = pkgs.pulumi-bin.version;
-        pulumi-XXX-version = what: builtins.elemAt
-          (pkgs.lib.flatten
-            (builtins.filter (x: x != null)
-              (map
-                (x: builtins.match "^pulumi-resource-${what}-v([0-9.]+)-linux.*" x.name)
-                pkgs.pulumi-bin.srcs)))
-          0;
-        pulumi-aws-version = pulumi-XXX-version "aws";
-        pulumi-hcloud-version = pulumi-XXX-version "hcloud";
         # Python environment
         python-env = mach-nix.mkPython {
           requirements = ''
