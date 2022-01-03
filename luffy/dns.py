@@ -31,21 +31,12 @@ class Zone:
         return self.record(name, "SRV", records, **kwargs)
 
     def registrar(self, provider):
-        """Register zone to Gandi.
-
-        Import resource with::
-
-            pulumi import gandi:domain/domain:Domain enxio.fr enxio.fr \
-                --protect=false \
-                --provider gandi=urn:pulumi:dev::pulumi-take1::pulumi:providers:gandi::gandi-vb
-        """
-        ignored = ["admins", "billings", "owners", "teches"]
-        gandi.domain.Domain(
+        """Register zone to Gandi."""
+        gandi.domain.Nameservers(
             self.name,
-            name=self.name,
+            domain=self.name,
             nameservers=self.zone.name_servers,
-            opts=pulumi.ResourceOptions(provider=provider, ignore_changes=ignored),
-            **{k: [] for k in ignored},
+            opts=pulumi.ResourceOptions(provider=provider),
         )
         if self.ksk:
             gandi.domain.DnssecKey(

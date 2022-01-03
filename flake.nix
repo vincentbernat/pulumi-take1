@@ -55,7 +55,7 @@
               vendorSha256 = "sha256-EkSZ2pGlyBLz+FL/0ViXmzKmWjcYqYYJ+rY18LF3Q4E=";
             };
             gandi = builder "gandi" inputs.gandi-provider {
-              vendorSha256 = "sha256-LjUxilWiVyzqjhRSfJ+tnxkj3JWb1o7xs1zBns1cTHA=";
+              vendorSha256 = "sha256-VELoPEgJkha1Gv79RWVQV1giX8jGEiEkS9qPgkDnzu8=";
             };
           };
         # Check Python versions for mismatch
