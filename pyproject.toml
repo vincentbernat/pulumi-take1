@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "pulumi-take1"
+version = "0.1.0"
+description = ""
+authors = ["Vincent Bernat <vincent@bernat.ch>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pulumi = "3.19.0"
+pulumi-aws = "4.30.0"
+pulumi-hcloud = "1.7.0"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
