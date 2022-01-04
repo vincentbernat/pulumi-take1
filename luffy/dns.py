@@ -73,6 +73,66 @@ class Zone:
             self.SRV(f"_{service}s._tcp", f"0 1 {port} {service}.fastmail.com.")
         return self
 
+    def www(self, name, **kwargs):
+        """Create records for web servers."""
+        ttl = 60 * 60 * 2
+        servers = {
+            server["server"].name: {
+                "A": server["server"].ipv4_address,
+                "AAAA": server["server"].ipv6_address,
+                "geolocations": server["geolocations"],
+            }
+            for server in all_servers
+            if not server.get("disabled") and "web" in server.get("tags", [])
+        }
+        self._www(name, servers, ttl, **kwargs)
+        self.record(name, "CAA", ['0 issue "buypass.com"', '0 issuewild ";"'])
+        if name == "@":
+            self.CNAME("_acme-challenge", f"{self.name}.acme.luffy.cx.")
+        else:
+            self.CNAME(f"_acme-challenge.{name}", f"{name}.{self.name}.acme.luffy.cx.")
+        return self
+
+    def _www(self, name, servers, ttl):
+        """Create A/AAAA records for servers."""
+        for rrtype in ("A", "AAAA"):
+            self.record(
+                name,
+                rrtype,
+                [servers[server][rrtype] for server in servers],
+                ttl=ttl,
+            )
+        return self
+
+
+class GandiZone(Zone):
+    def __init__(self, name, provider, **kwargs):
+        self.name = name
+        self.zone = gandi.livedns.Domain(
+            name,
+            name=name,
+            ttl=86400,
+            **kwargs,
+            opts=pulumi.ResourceOptions(provider=provider),
+        )
+        self.provider = provider
+        self.ksk = None
+
+    def record(self, name, rrtype, records, ttl=86400):
+        """Create a record."""
+        if type(records) is str:
+            records = [records]
+        gandi.livedns.Record(
+            f"{rrtype}-{name}.{self.name}",
+            zone=self.zone.id,
+            name=name,
+            type=rrtype,
+            ttl=ttl,
+            values=records,
+            opts=pulumi.ResourceOptions(provider=self.provider),
+        )
+        return self
+
 
 class Route53Zone(Zone):
     def __init__(self, name, **kwargs):
@@ -101,18 +161,8 @@ class Route53Zone(Zone):
         )
         return self
 
-    def www(self, name, geolocation=True):
+    def _www(self, name, servers, ttl, geolocation=True):
         """Create records for web servers."""
-        ttl = 60 * 60 * 2
-        servers = {
-            server["server"].name: {
-                "A": server["server"].ipv4_address,
-                "AAAA": server["server"].ipv6_address,
-                "geolocations": server["geolocations"],
-            }
-            for server in all_servers
-            if not server.get("disabled") and "web" in server.get("tags", [])
-        }
         if geolocation:
             # Normalize the data a bit
             geolocations = set()
@@ -145,18 +195,7 @@ class Route53Zone(Zone):
                         geolocation_routing_policies=[dict([geoloc])],
                     )
         else:
-            for rrtype in ("A", "AAAA"):
-                self.record(
-                    name,
-                    rrtype,
-                    [servers[server][rrtype] for server in servers],
-                    ttl=ttl,
-                )
-        self.record(name, "CAA", ['0 issue "buypass.com"', '0 issuewild ";"'])
-        if name == "@":
-            self.CNAME("_acme-challenge", f"{self.name}.acme.luffy.cx.")
-        else:
-            self.CNAME(f"_acme-challenge.{name}", f"{name}.{self.name}.acme.luffy.cx.")
+            super()._www(name, servers, ttl)
         return self
 
     def sign(self):
@@ -212,6 +251,9 @@ class Route53Zone(Zone):
 
 # enxio.fr
 zone = Route53Zone("enxio.fr").sign().registrar(gandi_vb)
+zone.www("@").www("www").www("media")
+zone.fastmail_mx()
+zone = GandiZone("enxio.fr", gandi_vb)
 zone.www("@").www("www").www("media")
 zone.fastmail_mx()
 
