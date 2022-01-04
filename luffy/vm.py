@@ -42,7 +42,9 @@ class VultrServer(Server):
         self.name = name
         self.obj = vultr.Instance(name, **kwargs)
         self.ipv4_address = self.obj.main_ip
-        self.ipv6_address = self.obj.v6_main_ip
+        self.ipv6_address = self.obj.v6_main_ip.apply(
+            lambda x: str(ipaddress.IPv6Address(x))
+        )
         vultr.ReverseIpv4(
             f"rdns4-{name}",
             instance_id=self.obj.id,

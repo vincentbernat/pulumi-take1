@@ -137,6 +137,8 @@ class GandiZone(Zone):
         """Create a record."""
         if type(records) is str:
             records = [records]
+        if rrtype == "TXT":
+            records = [f'"{r}"' for r in records]
         gandi.livedns.Record(
             f"{rrtype}-{name}.{self.name}",
             zone=self.name,
