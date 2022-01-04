@@ -93,8 +93,9 @@ class Zone:
             self.CNAME(f"_acme-challenge.{name}", f"{name}.{self.name}.acme.luffy.cx.")
         return self
 
-    def _www(self, name, servers, ttl):
+    def _www(self, name, servers, ttl, geolocation=False):
         """Create A/AAAA records for servers."""
+        assert not geolocation, "cannot handle geolocation request"
         for rrtype in ("A", "AAAA"):
             self.record(
                 name,
@@ -103,6 +104,26 @@ class Zone:
                 ttl=ttl,
             )
         return self
+
+
+class MultiZone(Zone):
+    def __init__(self, *zones):
+        self.zones = zones
+
+    def __getattribute__(self, attr):
+        if attr.startswith("__"):
+            return object.__getattribute__(self, attr)
+        zones = object.__getattribute__(self, "zones")
+        val = getattr(zones[0], attr)
+        if callable(val):
+
+            def wrapper(*args, **kwargs):
+                for zone in zones:
+                    getattr(zone, attr)(*args, **kwargs)
+                return self
+
+            return wrapper
+        return val
 
 
 class GandiZone(Zone):
@@ -250,15 +271,18 @@ class Route53Zone(Zone):
 
 
 # enxio.fr
-zone = Route53Zone("enxio.fr").sign().registrar(gandi_vb)
-zone.www("@").www("www").www("media")
-zone.fastmail_mx()
-zone = GandiZone("enxio.fr", gandi_vb)
+zone = MultiZone(
+    Route53Zone("enxio.fr").sign().registrar(gandi_vb),
+    GandiZone("enxio.fr", gandi_vb),
+)
 zone.www("@").www("www").www("media")
 zone.fastmail_mx()
 
 # une-oasis-une-ecole.fr
-zone = Route53Zone("une-oasis-une-ecole.fr").sign().registrar(gandi_rb)
+zone = MultiZone(
+    Route53Zone("une-oasis-une-ecole.fr").sign().registrar(gandi_rb),
+    GandiZone("une-oasis-une-ecole.fr", gandi_rb),
+)
 zone.www("@").www("www").www("media")
 zone.MX("@", ["10 spool.mail.gandi.net.", "50 fb.mail.gandi.net."])
 zone.TXT(
@@ -274,16 +298,25 @@ zone.TXT(
 )
 
 # bernat.im (not signed) / bernat.ch (signed)
-zone = Route53Zone("bernat.im").registrar(gandi_vb)
+zone = MultiZone(
+    Route53Zone("bernat.im").registrar(gandi_vb),
+    GandiZone("bernat.im", gandi_vb),
+)
 zone.www("@").www("vincent")
 zone.fastmail_mx()
-zone = Route53Zone("bernat.ch").sign().registrar(gandi_vb)
+zone = MultiZone(
+    Route53Zone("bernat.ch").sign().registrar(gandi_vb),
+    GandiZone("bernat.ch", gandi_vb),
+)
 zone.www("@").www("vincent").www("media")
 zone.CNAME("4unklrhyt7lw.vincent", "gv-qcgpdhlvhtgedt.dv.googlehosted.com.")
 zone.fastmail_mx(subdomains=["vincent"]).fastmail_services()
 
 # luffy.cx
-zone = luffy_cx = Route53Zone("luffy.cx").sign().registrar(gandi_vb)
+zone = luffy_cx = MultiZone(
+    Route53Zone("luffy.cx").sign().registrar(gandi_vb),
+    GandiZone("luffy.cx", gandi_vb),
+)
 zone.fastmail_mx()
 zone.www("@").www("media").www("www").www("haproxy", geolocation=False)
 zone.CNAME("comments", "web03.luffy.cx.")

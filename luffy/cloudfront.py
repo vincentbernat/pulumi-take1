@@ -63,5 +63,5 @@ def cloudfront_distribution(domain):
 
 
 cloudfront_distribution("media.luffy.cx")
-cloudfront_distribution("media.bernat.ch")
+# cloudfront_distribution("media.bernat.ch")
 cloudfront_distribution("media.une-oasis-une-ecole.fr")
