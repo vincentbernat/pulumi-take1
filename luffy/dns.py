@@ -128,14 +128,8 @@ class MultiZone(Zone):
 
 class GandiZone(Zone):
     def __init__(self, name, provider, **kwargs):
+        """Manage a zone on Gandi LiveDNS."""
         self.name = name
-        self.zone = gandi.livedns.Domain(
-            name,
-            name=name,
-            ttl=86400,
-            **kwargs,
-            opts=pulumi.ResourceOptions(provider=provider),
-        )
         self.provider = provider
         self.ksk = None
 
@@ -145,7 +139,7 @@ class GandiZone(Zone):
             records = [records]
         gandi.livedns.Record(
             f"{rrtype}-{name}.{self.name}",
-            zone=self.zone.id,
+            zone=self.name,
             name=name,
             type=rrtype,
             ttl=ttl,
