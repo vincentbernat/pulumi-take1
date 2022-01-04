@@ -101,7 +101,7 @@ class Route53Zone(Zone):
         )
         return self
 
-    def www(self, name):
+    def www(self, name, geolocation=True):
         """Create records for web servers."""
         ttl = 60 * 60 * 2
         servers = {
@@ -113,35 +113,44 @@ class Route53Zone(Zone):
             for server in all_servers
             if not server.get("disabled") and "web" in server.get("tags", [])
         }
-        # Normalize the data a bit
-        geolocations = set()
-        for server, data in servers.items():
-            data["geolocations"] = [
-                (k, v1) for k, v in data["geolocations"] for v1 in v
-            ]
-        # Build geolocation sets
-        geolocations = {
-            geoloc for data in servers.values() for geoloc in data["geolocations"]
-        }
-        # Compute records for each location
-        rrs = {}
-        rrs[("country", "*")] = servers.keys()
-        for geoloc in geolocations:
-            rrs[geoloc] = [
-                server
-                for server, data in servers.items()
-                if geoloc in data["geolocations"]
-            ]
-        # Create records for Route53
-        for rrtype in ("A", "AAAA"):
-            for geoloc, selected_servers in rrs.items():
+        if geolocation:
+            # Normalize the data a bit
+            geolocations = set()
+            for server, data in servers.items():
+                data["geolocations"] = [
+                    (k, v1) for k, v in data["geolocations"] for v1 in v
+                ]
+            # Build geolocation sets
+            geolocations = {
+                geoloc for data in servers.values() for geoloc in data["geolocations"]
+            }
+            # Compute records for each location
+            rrs = {}
+            rrs[("country", "*")] = servers.keys()
+            for geoloc in geolocations:
+                rrs[geoloc] = [
+                    server
+                    for server, data in servers.items()
+                    if geoloc in data["geolocations"]
+                ]
+            # Create records for Route53
+            for rrtype in ("A", "AAAA"):
+                for geoloc, selected_servers in rrs.items():
+                    self.record(
+                        name,
+                        rrtype,
+                        [servers[server][rrtype] for server in selected_servers],
+                        ttl=ttl,
+                        set_identifier=f"geo-{geoloc[0]}-{geoloc[1]}",
+                        geolocation_routing_policies=[dict([geoloc])],
+                    )
+        else:
+            for rrtype in ("A", "AAAA"):
                 self.record(
                     name,
                     rrtype,
-                    [servers[server][rrtype] for server in selected_servers],
+                    [servers[server][rrtype] for server in servers],
                     ttl=ttl,
-                    set_identifier=f"geo-{geoloc[0]}-{geoloc[1]}",
-                    geolocation_routing_policies=[dict([geoloc])],
                 )
         self.record(name, "CAA", ['0 issue "buypass.com"', '0 issuewild ";"'])
         if name == "@":
@@ -234,7 +243,7 @@ for zone in [Route53Zone("bernat.ch").sign(), Route53Zone("bernat.im")]:
 # luffy.cx
 zone = luffy_cx = Route53Zone("luffy.cx").sign().registrar(gandi_vb)
 zone.fastmail_mx()
-zone.www("@").www("media").www("www").www("haproxy")
+zone.www("@").www("media").www("www").www("haproxy", geolocation=False)
 zone.CNAME("comments", "web03.luffy.cx.")
 zone.CNAME("eizo", "eizo.y.luffy.cx.")
 for server in all_servers:
