@@ -237,6 +237,7 @@ for zone in [Route53Zone("bernat.ch").sign(), Route53Zone("bernat.im")]:
     zone.www("@").www("vincent")
     zone.fastmail_mx(subdomains=["vincent"])
     if zone.name == "bernat.ch":
+        zone.www("media")
         zone.fastmail_services()
         zone.CNAME("4unklrhyt7lw.vincent", "gv-qcgpdhlvhtgedt.dv.googlehosted.com.")
 
