@@ -232,14 +232,13 @@ zone.TXT(
 )
 
 # bernat.im (not signed) / bernat.ch (signed)
-for zone in [Route53Zone("bernat.ch").sign(), Route53Zone("bernat.im")]:
-    zone.registrar(gandi_vb)
-    zone.www("@").www("vincent")
-    zone.fastmail_mx(subdomains=["vincent"])
-    if zone.name == "bernat.ch":
-        zone.www("media")
-        zone.fastmail_services()
-        zone.CNAME("4unklrhyt7lw.vincent", "gv-qcgpdhlvhtgedt.dv.googlehosted.com.")
+zone = Route53Zone("bernat.im").registrar(gandi_vb)
+zone.www("@").www("vincent")
+zone.fastmail_mx()
+zone = Route53Zone("bernat.ch").sign().registrar(gandi_vb)
+zone.www("@").www("vincent").www("media")
+zone.CNAME("4unklrhyt7lw.vincent", "gv-qcgpdhlvhtgedt.dv.googlehosted.com.")
+zone.fastmail_mx(subdomains=["vincent"]).fastmail_services()
 
 # luffy.cx
 zone = luffy_cx = Route53Zone("luffy.cx").sign().registrar(gandi_vb)
