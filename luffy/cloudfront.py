@@ -60,7 +60,6 @@ def cloudfront_distribution(domain):
         viewer_certificate=aws.cloudfront.DistributionViewerCertificateArgs(
             cloudfront_default_certificate=True,
         ),
-        opts=pulumi.ResourceOptions(protect=True),
     )
 
 
