@@ -30,7 +30,7 @@ class Zone:
     def SRV(self, name, records, **kwargs):
         return self.record(name, "SRV", records, **kwargs)
 
-    def registrar(self, provider):
+    def registrar(self, provider, dnssec=True):
         """Register zone to Gandi."""
         gandi.domain.Nameservers(
             self.name,
@@ -38,7 +38,7 @@ class Zone:
             nameservers=self.zone.name_servers,
             opts=pulumi.ResourceOptions(provider=provider),
         )
-        if self.ksk:
+        if dnssec:
             gandi.domain.DnssecKey(
                 self.name,
                 domain=self.name,
@@ -295,7 +295,7 @@ zone.TXT(
 
 # bernat.im (not signed) / bernat.ch (signed)
 zone = MultiZone(
-    Route53Zone("bernat.im").registrar(gandi_vb),
+    Route53Zone("bernat.im").registrar(gandi_vb, dnssec=False),
     GandiZone("bernat.im", gandi_vb),
 )
 zone.www("@").www("vincent")
@@ -310,7 +310,7 @@ zone.fastmail_mx(subdomains=["vincent"]).fastmail_services()
 
 # luffy.cx
 zone = luffy_cx = MultiZone(
-    Route53Zone("luffy.cx").sign().registrar(gandi_vb),
+    Route53Zone("luffy.cx").sign().registrar(gandi_vb, dnssec=False),
     GandiZone("luffy.cx", gandi_vb),
 )
 zone.fastmail_mx()
