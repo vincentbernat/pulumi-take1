@@ -18,7 +18,9 @@ def cloudfront_distribution(domain):
             target_origin_id="MyOrigin",
             viewer_protocol_policy="allow-all",
             compress=True,
+            min_ttl=0,
             default_ttl=86400,
+            max_ttl=31536000,
             forwarded_values=aws.cloudfront.DistributionDefaultCacheBehaviorForwardedValuesArgs(
                 # No cookies
                 cookies=aws.cloudfront.DistributionDefaultCacheBehaviorForwardedValuesCookiesArgs(
@@ -63,5 +65,5 @@ def cloudfront_distribution(domain):
 
 
 cloudfront_distribution("media.luffy.cx")
-# cloudfront_distribution("media.bernat.ch")
+cloudfront_distribution("media.bernat.ch")
 cloudfront_distribution("media.une-oasis-une-ecole.fr")
