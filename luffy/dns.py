@@ -35,7 +35,7 @@ class Zone:
         gandi.domain.Nameservers(
             self.name,
             domain=self.name,
-            nameservers=self.zone.name_servers,
+            nameservers=self.name_servers(),
             opts=pulumi.ResourceOptions(provider=provider),
         )
         if dnssec:
@@ -133,6 +133,11 @@ class GandiZone(Zone):
         self.provider = provider
         self.ksk = None
 
+    def name_servers(self):
+        return gandi.livedns.get_nameservers(
+            name=self.name, opts=pulumi.InvokeOptions(provider=self.provider)
+        ).nameservers
+
     def record(self, name, rrtype, records, ttl=86400):
         """Create a record."""
         if type(records) is str:
@@ -156,6 +161,9 @@ class Route53Zone(Zone):
         self.name = name
         self.zone = aws.route53.Zone(name, name=name, **kwargs)
         self.ksk = None
+
+    def name_servers(self):
+        return self.zone.name_servers
 
     def record(self, name, rrtype, records, ttl=86400, **more):
         """Create a record."""
@@ -310,11 +318,11 @@ zone.fastmail_mx(subdomains=["vincent"]).fastmail_services()
 
 # luffy.cx
 zone = luffy_cx = MultiZone(
-    Route53Zone("luffy.cx").sign().registrar(gandi_vb, dnssec=False),
-    GandiZone("luffy.cx", gandi_vb),
+    GandiZone("luffy.cx", gandi_vb).registrar(gandi_vb, dnssec=False),
+    Route53Zone("luffy.cx").sign(),
 )
 zone.fastmail_mx()
-zone.www("@").www("media").www("www").www("haproxy", geolocation=False)
+zone.www("@").www("media").www("www").www("haproxy")
 zone.CNAME("comments", "web03.luffy.cx.")
 zone.CNAME("eizo", "eizo.y.luffy.cx.")
 for server in all_servers:
