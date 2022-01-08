@@ -20,7 +20,7 @@
           projectDir = ./.;
         };
         # Custom providers (pulumi+python)
-        pulumi-providers =
+        pulumiProviders =
           let builder = name: src': args: {
             plugin = pkgs.buildGoModule (rec {
               pname = "pulumi-provider-${name}";
@@ -53,7 +53,7 @@
             };
           };
         # Check Python versions for mismatch
-        pulumi-bin-versions = builtins.listToAttrs (map
+        pulumiVersions = builtins.listToAttrs (map
           (p:
             let
               match = builtins.match "^(pulumi.*)-v([0-9.]+)-.*" p.name;
@@ -64,34 +64,34 @@
             }
           )
           pkgs.pulumi-bin.srcs);
-        poetry-versions = lib.filterAttrs
+        poetryVersions = lib.filterAttrs
           (n: _: (builtins.match "^pulumi.*" n) != null)
           (builtins.listToAttrs (map
             (p: { name = p.pname; value = p.version; })
             poetry.poetryPackages));
         warnWhenMismatch = builtins.attrValues (lib.mapAttrs
           (p: v:
-            let bv = pulumi-bin-versions."${p}"; in
+            let bv = pulumiVersions."${p}"; in
             lib.warnIf (bv != v) "Versions mismatch for ${p}: ${bv} != ${v}" null)
-          poetry-versions);
+          poetryVersions);
         # Python environment
-        python-env = builtins.deepSeq warnWhenMismatch
+        pythonEnv = builtins.deepSeq warnWhenMismatch
           (poetry.python.withPackages (ps: poetry.poetryPackages ++ [
             ps.pip
             ps.setuptools
             ps.black
-            pulumi-providers.vultr.python
-            pulumi-providers.gandi.python
+            pulumiProviders.vultr.python
+            pulumiProviders.gandi.python
           ]));
       in
       {
         packages.poetry = pkgs.poetry;
-        devShell = python-env.env.overrideAttrs (oldAttrs: {
+        devShell = pythonEnv.env.overrideAttrs (oldAttrs: {
           name = "pulumi-take1";
           buildInputs = [
             pkgs.pulumi-bin
-            pulumi-providers.vultr.plugin
-            pulumi-providers.gandi.plugin
+            pulumiProviders.vultr.plugin
+            pulumiProviders.gandi.plugin
           ];
           shellHook = ''
             export PULUMI_SKIP_UPDATE_CHECK=1
