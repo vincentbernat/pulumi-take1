@@ -30,6 +30,9 @@ class Zone:
     def SRV(self, name, records, **kwargs):
         return self.record(name, "SRV", records, **kwargs)
 
+    def NS(self, name, records, **kwargs):
+        return self.record(name, "NS", records, **kwargs)
+
     def registrar(self, provider, dnssec=True):
         """Register zone to Gandi."""
         gandi.domain.Nameservers(
@@ -360,16 +363,16 @@ for server in all_servers:
 
 # y.luffy.cx (DDNS)
 zone = Route53Zone("y.luffy.cx").sign()
-luffy_cx.record(
-    "y", "NS", records=zone.get_nameservers().apply(lambda rrs: [f"{r}." for r in rrs])
+luffy_cx.NS(
+    "y", records=zone.get_nameservers().apply(lambda rrs: [f"{r}." for r in rrs])
 )
 luffy_cx.record("y", "DS", records=[zone.ksk.ds_record])
 zone.allow_user("DDNS")
 
 # acme.luffy.cx (ACME DNS-01 challenges)
 zone = Route53Zone("acme.luffy.cx").sign()
-luffy_cx.record(
-    "acme", "NS", records=zone.get_nameservers().apply(lambda rrs: [f"{r}." for r in rrs])
+luffy_cx.NS(
+    "acme", records=zone.get_nameservers().apply(lambda rrs: [f"{r}." for r in rrs])
 )
 luffy_cx.record("acme", "DS", records=[zone.ksk.ds_record])
 zone.allow_user("ACME")
