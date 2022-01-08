@@ -18,11 +18,11 @@
     "gandi-provider": {
       "flake": false,
       "locked": {
-        "lastModified": 1641139337,
-        "narHash": "sha256-WzKsKK3vZ4qhcu0xe0X6e3Kal7YIlcl7wK3bCRYLnvE=",
+        "lastModified": 1641680137,
+        "narHash": "sha256-LMaqfQXVd5xyQIJer/NaC8Zsb+0LVSMuoJCiFW3d0as=",
         "owner": "vincentbernat",
         "repo": "pulumi-gandi",
-        "rev": "98bc1f39887e8960b8d9ba9af1cd36df3d7fc317",
+        "rev": "8eb3610d62e626c9ef75b8fbf393f5aab0e147a6",
         "type": "github"
       },
       "original": {

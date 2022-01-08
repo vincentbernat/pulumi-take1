@@ -1,6 +1,6 @@
 import re
 import json
-import collections
+import types
 import pulumi
 import pulumi_aws as aws
 import pulumi_gandi as gandi
@@ -35,15 +35,16 @@ class Zone:
         gandi.domain.Nameservers(
             self.name,
             domain=self.name,
-            nameservers=self.name_servers(),
+            nameservers=self.get_nameservers(),
             opts=pulumi.ResourceOptions(provider=provider),
         )
         if dnssec:
+            ksk = self.get_ksk()
             gandi.domain.DnssecKey(
                 self.name,
                 domain=self.name,
-                algorithm=self.ksk.signing_algorithm_type,
-                public_key=self.ksk.public_key,
+                algorithm=ksk.signing_algorithm,
+                public_key=ksk.public_key,
                 type="ksk",
                 opts=pulumi.ResourceOptions(provider=provider),
             )
@@ -133,10 +134,17 @@ class GandiZone(Zone):
         self.provider = provider
         self.ksk = None
 
-    def name_servers(self):
+    def get_nameservers(self):
         return gandi.livedns.get_nameservers(
             name=self.name, opts=pulumi.InvokeOptions(provider=self.provider)
         ).nameservers
+
+    def get_ksk(self):
+        if not self.ksk:
+            raise RuntimeError(f"domain {self.name} not signed")
+        return types.SimpleNamespace(
+            public_key=self.ksk.public_key, signing_algorithm=self.ksk.algorithm
+        )
 
     def record(self, name, rrtype, records, ttl=86400):
         """Create a record."""
@@ -155,6 +163,15 @@ class GandiZone(Zone):
         )
         return self
 
+    def sign(self):
+        """Sign the zone."""
+        self.ksk = gandi.livedns.Key(
+            self.name,
+            domain=self.name,
+            opts=pulumi.ResourceOptions(provider=self.provider),
+        )
+        return self
+
 
 class Route53Zone(Zone):
     def __init__(self, name, **kwargs):
@@ -162,8 +179,16 @@ class Route53Zone(Zone):
         self.zone = aws.route53.Zone(name, name=name, **kwargs)
         self.ksk = None
 
-    def name_servers(self):
+    def get_nameservers(self):
         return self.zone.name_servers
+
+    def get_ksk(self):
+        if not self.ksk:
+            raise RuntimeError(f"domain {self.name} not signed")
+        return types.SimpleNamespace(
+            public_key=self.ksk.public_key,
+            signing_algorithm=self.ksk.signing_algorithm_type,
+        )
 
     def record(self, name, rrtype, records, ttl=86400, **more):
         """Create a record."""
@@ -277,7 +302,7 @@ class Route53Zone(Zone):
 # enxio.fr
 zone = MultiZone(
     Route53Zone("enxio.fr").sign().registrar(gandi_vb),
-    GandiZone("enxio.fr", gandi_vb),
+    GandiZone("enxio.fr", gandi_vb).sign(),
 )
 zone.www("@").www("www").www("media")
 zone.fastmail_mx()
@@ -318,7 +343,7 @@ zone.fastmail_mx(subdomains=["vincent"]).fastmail_services()
 
 # luffy.cx
 zone = luffy_cx = MultiZone(
-    GandiZone("luffy.cx", gandi_vb).registrar(gandi_vb, dnssec=False),
+    GandiZone("luffy.cx", gandi_vb).sign().registrar(gandi_vb),
     Route53Zone("luffy.cx").sign(),
 )
 zone.fastmail_mx()

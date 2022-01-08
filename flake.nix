@@ -18,11 +18,6 @@
         lib = pkgs.lib;
         poetry = pkgs.poetry2nix.mkPoetryPackages {
           projectDir = ./.;
-          overrides = pkgs.poetry2nix.overrides.withDefaults (self: super: {
-            pytest = super.pytest.overridePythonAttrs (
-              old: { doCheck = false; doInstallCheck = false; }
-            );
-          });
         };
         # Custom providers (pulumi+python)
         pulumiProviders =
@@ -54,7 +49,7 @@
               vendorSha256 = "sha256-EkSZ2pGlyBLz+FL/0ViXmzKmWjcYqYYJ+rY18LF3Q4E=";
             };
             gandi = builder "gandi" inputs.gandi-provider {
-              vendorSha256 = "sha256-VELoPEgJkha1Gv79RWVQV1giX8jGEiEkS9qPgkDnzu8=";
+              vendorSha256 = "sha256-olJ6ai+/FPIGlxo7VXWWGsGbqc0EmlqOMrizZh9XMu8=";
             };
           };
         # Check Python versions for mismatch
