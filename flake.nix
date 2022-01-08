@@ -18,6 +18,11 @@
         lib = pkgs.lib;
         poetry = pkgs.poetry2nix.mkPoetryPackages {
           projectDir = ./.;
+          overrides = pkgs.poetry2nix.overrides.withDefaults (self: super: {
+            pytest = super.pytest.overridePythonAttrs (
+              old: { doCheck = false; doInstallCheck = false; }
+            );
+          });
         };
         # Custom providers (pulumi+python)
         pulumiProviders =
