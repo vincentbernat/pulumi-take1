@@ -314,7 +314,7 @@ zone.fastmail_mx()
 # une-oasis-une-ecole.fr
 zone = MultiZone(
     Route53Zone("une-oasis-une-ecole.fr").sign().registrar(gandi_rb, dnssec=False),
-    GandiZone("une-oasis-une-ecole.fr", gandi_rb),
+    GandiZone("une-oasis-une-ecole.fr", gandi_rb).sign(),
 )
 zone.www("@").www("www").www("media")
 zone.MX("@", ["10 spool.mail.gandi.net.", "50 fb.mail.gandi.net."])
@@ -338,8 +338,8 @@ zone = MultiZone(
 zone.www("@").www("vincent")
 zone.fastmail_mx()
 zone = MultiZone(
-    Route53Zone("bernat.ch").sign().registrar(gandi_vb,),
-    GandiZone("bernat.ch", gandi_vb),
+    Route53Zone("bernat.ch").sign().registrar(gandi_vb),
+    GandiZone("bernat.ch", gandi_vb).sign(),
 )
 zone.www("@").www("vincent").www("media")
 zone.CNAME("4unklrhyt7lw.vincent", "gv-qcgpdhlvhtgedt.dv.googlehosted.com.")
