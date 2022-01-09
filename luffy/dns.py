@@ -304,7 +304,7 @@ class Route53Zone(Zone):
 
 # enxio.fr
 zone = MultiZone(
-    Route53Zone("enxio.fr").sign().registrar(gandi_vb),
+    Route53Zone("enxio.fr").sign().registrar(gandi_vb, dnssec=False),
     GandiZone("enxio.fr", gandi_vb).sign(),
 )
 zone.www("@").www("www").www("media")
@@ -312,7 +312,7 @@ zone.fastmail_mx()
 
 # une-oasis-une-ecole.fr
 zone = MultiZone(
-    Route53Zone("une-oasis-une-ecole.fr").sign().registrar(gandi_rb),
+    Route53Zone("une-oasis-une-ecole.fr").sign().registrar(gandi_rb, dnssec=False),
     GandiZone("une-oasis-une-ecole.fr", gandi_rb),
 )
 zone.www("@").www("www").www("media")
@@ -337,7 +337,7 @@ zone = MultiZone(
 zone.www("@").www("vincent")
 zone.fastmail_mx()
 zone = MultiZone(
-    Route53Zone("bernat.ch").sign().registrar(gandi_vb),
+    Route53Zone("bernat.ch").sign().registrar(gandi_vb,),
     GandiZone("bernat.ch", gandi_vb),
 )
 zone.www("@").www("vincent").www("media")
