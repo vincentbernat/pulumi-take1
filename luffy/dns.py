@@ -1,9 +1,12 @@
 import re
 import json
 import types
+from abc import ABC, abstractmethod
+
 import pulumi
 import pulumi_aws as aws
 import pulumi_gandi as gandi
+
 from .kms import dns_cmk
 from .vm import all_servers
 
@@ -11,7 +14,7 @@ gandi_vb = gandi.Provider("gandi-vb", key=pulumi.Config().get_secret("gandi-vb")
 gandi_rb = gandi.Provider("gandi-rb", key=pulumi.Config().get_secret("gandi-rb"))
 
 
-class Zone:
+class Zone(ABC):
     def TXT(self, name, records, **kwargs):
         return self.record(name, "TXT", records, **kwargs)
 
@@ -32,6 +35,26 @@ class Zone:
 
     def NS(self, name, records, **kwargs):
         return self.record(name, "NS", records, **kwargs)
+
+    @abstractmethod
+    def get_nameservers(self):
+        """Get list of nameservers."""
+        pass
+
+    @abstractmethod
+    def get_ksk(self):
+        """Get key signing key."""
+        pass
+
+    @abstractmethod
+    def record(self, name, rrtype, records, ttl=86400):
+        """Create a record."""
+        pass
+
+    @abstractmethod
+    def sign(self):
+        """Sign the zone."""
+        pass
 
     def registrar(self, provider, dnssec=True):
         """Register zone to Gandi."""
@@ -89,7 +112,7 @@ class Zone:
             for server in all_servers
             if not server.get("disabled") and "web" in server.get("tags", [])
         }
-        self._www(name, servers, ttl, **kwargs)
+        self.www_A_AAAA(name, servers, ttl, **kwargs)
         self.record(name, "CAA", ['0 issue "buypass.com"', '0 issuewild ";"'])
         if name == "@":
             self.CNAME("_acme-challenge", f"{self.name}.acme.luffy.cx.")
@@ -97,7 +120,7 @@ class Zone:
             self.CNAME(f"_acme-challenge.{name}", f"{name}.{self.name}.acme.luffy.cx.")
         return self
 
-    def _www(self, name, servers, ttl, geolocation=False):
+    def www_A_AAAA(self, name, servers, ttl, geolocation=False):
         """Create A/AAAA records for servers."""
         assert not geolocation, "cannot handle geolocation request"
         for rrtype in ("A", "AAAA"):
@@ -110,7 +133,7 @@ class Zone:
         return self
 
 
-class MultiZone(Zone):
+class MultiZone:
     def __init__(self, *zones):
         self.zones = zones
 
@@ -214,7 +237,7 @@ class Route53Zone(Zone):
         )
         return self
 
-    def _www(self, name, servers, ttl, geolocation=True):
+    def www_A_AAAA(self, name, servers, ttl, geolocation=True):
         """Create records for web servers."""
         if geolocation:
             # Normalize the data a bit
