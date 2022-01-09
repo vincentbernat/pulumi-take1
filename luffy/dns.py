@@ -369,10 +369,7 @@ zone.CNAME("4unklrhyt7lw.vincent", "gv-qcgpdhlvhtgedt.dv.googlehosted.com.")
 zone.fastmail_mx(subdomains=["vincent"]).fastmail_services()
 
 # luffy.cx
-zone = luffy_cx = MultiZone(
-    GandiZone("luffy.cx", gandi_vb).sign().registrar(gandi_vb),
-    Route53Zone("luffy.cx").sign(),
-)
+zone = luffy_cx = GandiZone("luffy.cx", gandi_vb).sign().registrar(gandi_vb)
 zone.fastmail_mx()
 zone.www("@").www("media").www("www").www("haproxy")
 zone.CNAME("comments", "web03.luffy.cx.")
