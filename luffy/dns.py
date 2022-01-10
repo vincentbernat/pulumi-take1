@@ -325,20 +325,16 @@ class Route53Zone(Zone):
         return self
 
 
-# enxio.fr
+# enxio.fr/enx.io (on Gandi)
 zone = MultiZone(
-    Route53Zone("enxio.fr").sign().registrar(gandi_vb, dnssec=False),
-    GandiZone("enxio.fr", gandi_vb).sign(),
-    GandiZone("enx.io", gandi_vb).sign().registrar(gandi_vb, dnssec=False),
+    GandiZone("enxio.fr", gandi_vb).sign().registrar(gandi_vb),
+    GandiZone("enx.io", gandi_vb).sign().registrar(gandi_vb),
 )
 zone.www("@").www("www").www("media")
 zone.fastmail_mx()
 
-# une-oasis-une-ecole.fr
-zone = MultiZone(
-    Route53Zone("une-oasis-une-ecole.fr").sign().registrar(gandi_rb, dnssec=False),
-    GandiZone("une-oasis-une-ecole.fr", gandi_rb).sign(),
-)
+# une-oasis-une-ecole.fr (on Gandi)
+zone = GandiZone("une-oasis-une-ecole.fr", gandi_rb).sign().registrar(gandi_rb)
 zone.www("@").www("www").www("media")
 zone.MX("@", ["10 spool.mail.gandi.net.", "50 fb.mail.gandi.net."])
 zone.TXT(
@@ -353,13 +349,15 @@ zone.TXT(
     "k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDWsJlP6+qLJS/RLvoNrMPRPrfzcQAuvZ1vUIJkqGauJ23zowQ9ni44XqzYyiBPx00c0QCQhO7oBEhnTeVGMcIfzNASeofZDfiu2dk7iOARpBeKT+EPJtXKS8cW0nz6cusANW7Mxa1Or1sUeV5+J0jFSAmeqWjginJPHJri7ZDA6QIDAQAB",
 )
 
-# bernat.im (not signed) / bernat.ch (signed)
+# bernat.im (not signed), on Route53, backup on Gandi
 zone = MultiZone(
     Route53Zone("bernat.im").registrar(gandi_vb, dnssec=False),
     GandiZone("bernat.im", gandi_vb),
 )
 zone.www("@").www("vincent")
 zone.fastmail_mx()
+
+# bernat.ch, on Route 53, backup on Gandi
 zone = MultiZone(
     Route53Zone("bernat.ch").sign().registrar(gandi_vb),
     GandiZone("bernat.ch", gandi_vb).sign(),
@@ -368,7 +366,7 @@ zone.www("@").www("vincent").www("media")
 zone.CNAME("4unklrhyt7lw.vincent", "gv-qcgpdhlvhtgedt.dv.googlehosted.com.")
 zone.fastmail_mx(subdomains=["vincent"]).fastmail_services()
 
-# luffy.cx
+# luffy.cx, on Gandi
 zone = luffy_cx = GandiZone("luffy.cx", gandi_vb).sign().registrar(gandi_vb)
 zone.fastmail_mx()
 zone.www("@").www("media").www("www").www("haproxy")
@@ -382,7 +380,7 @@ for server in all_servers:
     zone.A(name, [server["server"].ipv4_address])
     zone.AAAA(name, [server["server"].ipv6_address])
 
-# y.luffy.cx (DDNS)
+# y.luffy.cx (DDNS), on Route53
 zone = Route53Zone("y.luffy.cx").sign()
 luffy_cx.NS(
     "y", records=zone.get_nameservers().apply(lambda rrs: [f"{r}." for r in rrs])
@@ -390,7 +388,7 @@ luffy_cx.NS(
 luffy_cx.record("y", "DS", records=[zone.ksk.ds_record])
 zone.allow_user("DDNS")
 
-# acme.luffy.cx (ACME DNS-01 challenges)
+# acme.luffy.cx (ACME DNS-01 challenges), on Route53
 zone = Route53Zone("acme.luffy.cx").sign()
 luffy_cx.NS(
     "acme", records=zone.get_nameservers().apply(lambda rrs: [f"{r}." for r in rrs])
