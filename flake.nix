@@ -10,6 +10,10 @@
       url = "github:vincentbernat/pulumi-gandi";
       flake = false;
     };
+    pulumictl = {
+      url = "github:pulumi/pulumictl?ref=v0.0.29";
+      flake = false;
+    };
   };
   outputs = { self, flake-utils, ... }@inputs:
     flake-utils.lib.eachDefaultSystem (system:
@@ -86,6 +90,15 @@
       in
       {
         packages.poetry = pkgs.poetry;
+        packages.pulumictl = pkgs.buildGoModule rec {
+          name = "pulumictl";
+          src = inputs.pulumictl;
+          vendorSha256 = "sha256-xalfnLc6bPBvm2B42+FzpgrOH541HMWmNHChveI792s=";
+          ldflags = [
+            "-s" "-w" "-X=github.com/pulumi/pulumictl/pkg/version.Version=${src.rev}"
+          ];
+          subPackages = [ "cmd/pulumictl" ];
+        };
         devShell = pythonEnv.env.overrideAttrs (oldAttrs: {
           name = "pulumi-take1";
           buildInputs = [
