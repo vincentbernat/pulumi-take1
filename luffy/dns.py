@@ -325,11 +325,8 @@ class Route53Zone(Zone):
         return self
 
 
-# enxio.fr/enx.io (on Gandi)
-zone = MultiZone(
-    GandiZone("enxio.fr", gandi_vb).sign().registrar(gandi_vb),
-    GandiZone("enx.io", gandi_vb).sign().registrar(gandi_vb),
-)
+# enxio.fr (on Gandi)
+zone = GandiZone("enxio.fr", gandi_vb).sign().registrar(gandi_vb)
 zone.www("@").www("www").www("media")
 zone.fastmail_mx()
 
