@@ -10,10 +10,6 @@
       url = "github:vincentbernat/pulumi-gandi";
       flake = false;
     };
-    pulumictl = {
-      url = "github:pulumi/pulumictl?ref=v0.0.29";
-      flake = false;
-    };
   };
   outputs = { self, flake-utils, ... }@inputs:
     flake-utils.lib.eachDefaultSystem (system:
@@ -24,15 +20,6 @@
           projectDir = ./.;
         };
         # Custom providers (pulumi+python)
-        pulumictl = pkgs.buildGoModule {
-          name = "pulumictl";
-          src = inputs.pulumictl;
-          vendorSha256 = "sha256-xalfnLc6bPBvm2B42+FzpgrOH541HMWmNHChveI792s=";
-          ldflags = [
-            "-s" "-w" "-X=github.com/pulumi/pulumictl/pkg/version.Version=${inputs.pulumictl.rev}"
-          ];
-          subPackages = [ "cmd/pulumictl" ];
-        };
         pulumiProviders =
           let builder = name: src': args: {
             plugin = pkgs.buildGoModule (rec {
@@ -99,12 +86,10 @@
       in
       {
         packages.poetry = pkgs.poetry;
-        packages.pulumictl = pulumictl;
         devShell = pythonEnv.env.overrideAttrs (oldAttrs: {
           name = "pulumi-take1";
           buildInputs = [
             pkgs.pulumi-bin
-            pulumictl
             pulumiProviders.vultr.plugin
             pulumiProviders.gandi.plugin
           ];
