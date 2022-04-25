@@ -46,29 +46,11 @@
         "type": "github"
       }
     },
-    "pulumictl": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1638296480,
-        "narHash": "sha256-2jTxtgEg+x/NY/LTWT5+9K9bilOw2bLTUIctjd+qwLE=",
-        "owner": "pulumi",
-        "repo": "pulumictl",
-        "rev": "dcda1de4811d6b5a8d24b4fedfacf34096a4402b",
-        "type": "github"
-      },
-      "original": {
-        "owner": "pulumi",
-        "ref": "v0.0.29",
-        "repo": "pulumictl",
-        "type": "github"
-      }
-    },
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
         "gandi-provider": "gandi-provider",
         "nixpkgs": "nixpkgs",
-        "pulumictl": "pulumictl",
         "vultr-provider": "vultr-provider"
       }
     },
