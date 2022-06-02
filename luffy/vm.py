@@ -70,10 +70,11 @@ all_servers = [
         "server": HetznerServer("web04.luffy.cx", "1413514"),
         "geolocations": [("continent", ["EU", "AF"])],
         "tags": ["web"],
+        "disabled": True,
     },
     {
         "server": HetznerServer("web05.luffy.cx", "15724596"),
-        "geolocations": [("continent", ["NA", "SA"])],
+        "geolocations": [("continent", ["NA", "SA", "EU", "AF"])],
         "tags": ["web"],
     },
     {
