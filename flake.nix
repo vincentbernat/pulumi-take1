@@ -21,28 +21,29 @@
         };
         # Custom providers (pulumi+python)
         pulumiProviders =
-          let builder = name: src': args: {
-            plugin = pkgs.buildGoModule (rec {
-              pname = "pulumi-provider-${name}";
-              version = "0.0.0";
-              src = src';
-              modRoot = "./provider";
-              preBuild = ''
-                cat <<EOF > pkg/version/version.go
-                package version
-                var Version string = "v0.0.0"
-                EOF
-              '';
-              subPackages = [ "cmd/pulumi-resource-${name}" ];
-            } // args);
-            python = pkgs.python3.pkgs.buildPythonPackage {
-              pname = "pulumi_${name}";
-              version = "0.0.0";
-              src = "${src'}/sdk/python";
-              doCheck = false;
-              propagatedBuildInputs = poetry.poetryPackages;
+          let
+            builder = name: src': args: {
+              plugin = pkgs.buildGoModule (rec {
+                pname = "pulumi-provider-${name}";
+                version = "0.0.0";
+                src = src';
+                modRoot = "./provider";
+                preBuild = ''
+                  cat <<EOF > pkg/version/version.go
+                  package version
+                  var Version string = "v0.0.0"
+                  EOF
+                '';
+                subPackages = [ "cmd/pulumi-resource-${name}" ];
+              } // args);
+              python = pkgs.python3.pkgs.buildPythonPackage {
+                pname = "pulumi_${name}";
+                version = "0.0.0";
+                src = "${src'}/sdk/python";
+                doCheck = false;
+                propagatedBuildInputs = poetry.poetryPackages;
+              };
             };
-          };
           in
           {
             vultr = builder "vultr" inputs.vultr-provider {
