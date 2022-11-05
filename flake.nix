@@ -7,7 +7,7 @@
       flake = false;
     };
     gandi-provider = {
-      url = "github:vincentbernat/pulumi-gandi";
+      url = "github:vincentbernat/pulumi-gandi?ref=vbe/main";
       flake = false;
     };
   };
@@ -18,6 +18,11 @@
         lib = pkgs.lib;
         poetry = pkgs.poetry2nix.mkPoetryPackages {
           projectDir = ./.;
+          overrides = pkgs.poetry2nix.overrides.withDefaults (self: super: {
+            pulumi-hcloud = super.pulumi-hcloud.overridePythonAttrs (old: {
+              nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ self.setuptools ];
+            });
+          });
         };
         # Custom providers (pulumi+python)
         pulumiProviders =
@@ -50,10 +55,10 @@
               vendorSha256 = "sha256-EkSZ2pGlyBLz+FL/0ViXmzKmWjcYqYYJ+rY18LF3Q4E=";
             };
             gandi = builder "gandi" inputs.gandi-provider {
-              vendorSha256 = "sha256-olJ6ai+/FPIGlxo7VXWWGsGbqc0EmlqOMrizZh9XMu8=";
+              vendorSha256 = "sha256-auhDWu+0bVvZ8wUPKVyUR6DzvxBd9jI0XLAMTv7BYwI=";
             };
           };
-        # Check Python versions for mismatch
+        # Check Python versions for mismatch (against the providers shipped in pulumi-bin package)
         pulumiVersions = builtins.listToAttrs (map
           (p:
             let

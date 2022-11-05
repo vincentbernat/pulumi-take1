@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 
 import pulumi
 import pulumi_aws as aws
-import pulumi_gandi as gandi
+import pulumiverse_gandi as gandi
 
 from .kms import dns_cmk
 from .vm import all_servers
@@ -58,7 +58,7 @@ class Zone(ABC):
 
     def registrar(self, provider, dnssec=True):
         """Register zone to Gandi."""
-        gandi.domain.Nameservers(
+        gandi.domains.Nameservers(
             self.name,
             domain=self.name,
             nameservers=self.get_nameservers(),
@@ -66,7 +66,7 @@ class Zone(ABC):
         )
         if dnssec:
             ksk = self.get_ksk()
-            gandi.domain.DnssecKey(
+            gandi.domains.DNSSecKey(
                 self.name,
                 domain=self.name,
                 algorithm=ksk.signing_algorithm,
@@ -161,7 +161,7 @@ class GandiZone(Zone):
         self.ksk = None
 
     def get_nameservers(self):
-        return gandi.livedns.get_nameservers(
+        return gandi.livedns.get_domain_nameserver(
             name=self.name, opts=pulumi.InvokeOptions(provider=self.provider)
         ).nameservers
 

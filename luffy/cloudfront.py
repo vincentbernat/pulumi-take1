@@ -34,7 +34,7 @@ def cloudfront_distribution(domain):
             ),
         ),
         enabled=True,
-        http_version="http2",
+        http_version="http2and3",
         is_ipv6_enabled=True,
         origins=[
             aws.cloudfront.DistributionOriginArgs(
