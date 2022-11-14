@@ -101,14 +101,15 @@
           ];
           shellHook = ''
             export PULUMI_SKIP_UPDATE_CHECK=1
-            echo "Importing secrets..."
-            export PULUMI_CONFIG_PASSPHRASE=$(pass show personal/pulumi/stack-dev)
-            for p in \
-              njf.nznmba.pbz/Nqzvavfgengbe \
-              urgmare.pbz/ivaprag@oreang.pu \
-              ihyge.pbz/ihyge@ivaprag.oreang.pu; do
-                eval $(pass show personal/$(echo $p | tr 'A-Za-z' 'N-ZA-Mn-za-m') | grep '^export')
-            done
+            [ "$TERM" = dumb ] || {
+              export PULUMI_CONFIG_PASSPHRASE=$(pass show personal/pulumi/stack-dev)
+              for p in \
+                njf.nznmba.pbz/Nqzvavfgengbe \
+                urgmare.pbz/ivaprag@oreang.pu \
+                ihyge.pbz/ihyge@ivaprag.oreang.pu; do
+                  eval $(pass show personal/$(echo $p | tr 'A-Za-z' 'N-ZA-Mn-za-m') | grep '^export')
+              done
+            }
           '';
         });
       });
